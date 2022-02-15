@@ -16,13 +16,10 @@ contract DemoDapp is ERC1155, Ownable {
     uint256 giveaways = 250;
     uint256 batchSupply = 1000 - giveaways;
 
-    uint256[] batchMintAmmount = [1, 1, 1, 1, 1, 3];
-    uint256[] batchIdHolder = [0, 0, 0, 0, 0, 0];
-
     event IncreaseReceiptSupply(address _sender, uint256 _supply);
 
     mapping(address => uint256) private bundleBalance; // stop people from trading out and buying if nfts are traded to another account the account traded to can still buy
-    mapping(uint256 => address) private _owners; // Token to wallet address
+    mapping(uint256 => address) private tokenIdToAddress; // used for cuteeExchange. can use balaneceOf Instead
 
     constructor(string memory uri) ERC1155(uri) {}
 
@@ -43,7 +40,16 @@ contract DemoDapp is ERC1155, Ownable {
         );
 
         // set token ids that are going to be minted
-        uint256[] memory idHolder = batchIdHolder;
+        // uint256[] memory idHolder = batchIdHolder;
+        uint256[] memory batchMintAmmount = new uint256[](6);
+        batchMintAmmount[0] = 1;
+        batchMintAmmount[1] = 1;
+        batchMintAmmount[2] = 1;
+        batchMintAmmount[3] = 1;
+        batchMintAmmount[4] = 1;
+        batchMintAmmount[5] = 3;
+
+        uint256[] memory idHolder = new uint256[](6);
         idHolder[0] = fruitTokenId;
         fruitTokenId++;
         idHolder[1] = fruitTokenId;
@@ -65,27 +71,37 @@ contract DemoDapp is ERC1155, Ownable {
     }
 
     /// @notice This givaway will not impact the presale and sale to minting limit of 1
-    // Can i make this a multiple match batch to gift multiple people at once?
-    function giveawayMintBatch(address _to) external onlyOwner {
+    /// @dev the parameter is an array to mint multiple batches at once
+    function giveawayMintBatch(address[] calldata _to) external onlyOwner {
         require(giveaways > 0, "Out of Giveaways.");
-        uint256[] memory idHolder = batchIdHolder;
-        idHolder[0] = fruitTokenId;
-        fruitTokenId++;
-        idHolder[1] = fruitTokenId;
-        fruitTokenId++;
-        idHolder[2] = fruitTokenId;
-        fruitTokenId++;
-        idHolder[3] = fruitTokenId;
-        fruitTokenId++;
-        idHolder[4] = fourInOneTokenId;
-        fourInOneTokenId++;
-        idHolder[5] = receiptTokenId;
 
-        _mintBatch(_to, idHolder, batchMintAmmount, "");
+        uint256[] memory batchMintAmmount = new uint256[](6);
+        batchMintAmmount[0] = 1;
+        batchMintAmmount[1] = 1;
+        batchMintAmmount[2] = 1;
+        batchMintAmmount[3] = 1;
+        batchMintAmmount[4] = 1;
+        batchMintAmmount[5] = 3;
 
-        receiptTotalSupply = receiptTotalSupply - 3;
-        giveaways--;
-        batchSupply--;
+        uint256[] memory idHolder = new uint256[](6);
+
+        for (uint256 i = 0; i < _to.length; i++) {
+            idHolder[0] = fruitTokenId;
+            fruitTokenId++;
+            idHolder[1] = fruitTokenId;
+            fruitTokenId++;
+            idHolder[2] = fruitTokenId;
+            fruitTokenId++;
+            idHolder[3] = fruitTokenId;
+            fruitTokenId++;
+            idHolder[4] = fourInOneTokenId;
+            fourInOneTokenId++;
+            idHolder[5] = receiptTokenId;
+            _mintBatch(_to[i], idHolder, batchMintAmmount, "");
+            receiptTotalSupply = receiptTotalSupply - 3;
+            giveaways--;
+            batchSupply--;
+        }
     }
 
     function increaseReceiptSupply(uint256 _supply) external onlyOwner {
@@ -93,6 +109,7 @@ contract DemoDapp is ERC1155, Ownable {
         emit IncreaseReceiptSupply(msg.sender, _supply);
     }
 
+    // probably dont need this theres no outside test cases
     function getBundleBalance() public view returns (uint256) {
         return bundleBalance[msg.sender];
     }
@@ -105,6 +122,7 @@ contract DemoDapp is ERC1155, Ownable {
         return receiptTotalSupply;
     }
 
+    // can be a seperate contract to inherit
     function getBalanceOfContract() public view onlyOwner returns (uint256) {
         return address(this).balance;
     }
@@ -112,5 +130,30 @@ contract DemoDapp is ERC1155, Ownable {
     function withdrawBalance() external onlyOwner {
         require(address(this).balance > 0, "No ether in contract");
         payable(msg.sender).transfer(address(this).balance);
+    }
+
+    function cuteeExchange(
+        uint256 _fruitTokenId,
+        uint256 _fourInOneTokenId,
+        uint256 _quadrant
+    ) public {
+        // if quadrant is a large number send it to the oracle and it will do modulus on it. This will save gas for exchange
+        address[] memory accounts = new address[](3);
+        uint256[] memory balances = new uint256[](3);
+        uint256[] memory balanceCheck = new uint256[](3);
+
+        accounts[0] = msg.sender;
+        accounts[1] = msg.sender;
+        accounts[2] = msg.sender;
+
+        balances[0] = _fruitTokenId;
+        balances[1] = _fourInOneTokenId;
+        balances[2] = receiptTokenId;
+
+        balanceCheck = balanceOfBatch(accounts, balances);
+
+        require(balanceCheck[0] > 0, "You do not own the fruittoken");
+        require(balanceCheck[1] > 0, "You do not own the fourInOneToken");
+        require(balanceCheck[2] > 0, "You do not own a receipt for exchange");
     }
 }
