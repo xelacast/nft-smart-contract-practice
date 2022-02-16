@@ -66,6 +66,7 @@ contract DemoDapp is ERC1155, Ownable {
 
         _mintBatch(msg.sender, idHolder, batchMintAmmount, "");
 
+        // compare function calls to update state variables. If not
         receiptTotalSupply = receiptTotalSupply - 3;
         batchSupply--;
     }
@@ -155,5 +156,9 @@ contract DemoDapp is ERC1155, Ownable {
         require(balanceCheck[0] > 0, "You do not own the fruittoken");
         require(balanceCheck[1] > 0, "You do not own the fourInOneToken");
         require(balanceCheck[2] > 0, "You do not own a receipt for exchange");
+
+        // send to oracle
+
+        // return oracle boolean.
     }
 }
