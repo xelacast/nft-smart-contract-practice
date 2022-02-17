@@ -26,11 +26,6 @@ contract DemoDapp is ERC1155, Ownable, VIF {
 
     // must add noreentry to here and cutee exchange
     function mintBundle() external payable isSaleActive {
-        // require(_quantity < 3, "Quantity given is too high");
-        // require(
-        //     msg.value >= (0.1 ether) * _quantity,
-        //     "Not enough ether in account to transact."
-        // );
         require(
             msg.value >= 0.1 ether,
             "Not enough ether was sent to transaction"
@@ -45,13 +40,7 @@ contract DemoDapp is ERC1155, Ownable, VIF {
             msg.sender == tx.origin,
             "Contract calls cannot mint our supply"
         );
-        // require(
-        //     (presaleIsActive && addressToVIF[msg.sender] > 0) || saleIsActive,
-        //     "presale is active and you are not a VIF or public sale is not active"
-        // );
 
-        // set token ids that are going to be minted
-        // uint256[] memory idHolder = batchIdHolder;
         uint256[] memory batchMintAmmount = new uint256[](6);
         uint256[] memory idHolder = new uint256[](6);
 
@@ -79,7 +68,6 @@ contract DemoDapp is ERC1155, Ownable, VIF {
 
         _mintBatch(msg.sender, idHolder, batchMintAmmount, "");
 
-        // compare function calls to update state variables. If not
         receiptTotalSupply = receiptTotalSupply - 3;
         bundleSupply--;
         // }
@@ -181,22 +169,8 @@ contract DemoDapp is ERC1155, Ownable, VIF {
     bool saleIsActive = false;
     bool presaleIsActive = false;
 
-    // modifier isSaleActive() {
-    //     if (presaleIsActive) {
-    //         require(
-    //             addressToVIF[msg.sender] > 0,
-    //             "Presale is active but you're are not a VIF"
-    //         );
-    //     } else {
-    //         require(saleIsActive, "Public sale is not active");
-    //     }
-    //     _;
-    // }
-
     /// @dev uses block time stamp to start presale and sale based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales) saleTime will be set with _presaleStartTime+_timeBetweenSales
     modifier isSaleActive() {
-        console.log("Inside isSaleActive ", block.timestamp);
-        console.log("presale Start Time", presaleStartTime);
         require(block.timestamp > presaleStartTime, "Presale has not started");
         if (
             block.timestamp > presaleStartTime &&
@@ -206,11 +180,6 @@ contract DemoDapp is ERC1155, Ownable, VIF {
                 addressToVIF[msg.sender] > 0,
                 "Presale is active but you're are not a VIF, wait for public sale"
             );
-            // } else {
-            //     require(
-            //         block.timestamp > saleStartTime,
-            //         "Public sale is not active"
-            //     );
         }
         _;
     }
@@ -244,9 +213,6 @@ contract DemoDapp is ERC1155, Ownable, VIF {
     ) public onlyOwner {
         presaleStartTime = _presaleStartTime;
         saleStartTime = _presaleStartTime + _timeBetweenSales;
-        console.log("Time between sales ", _timeBetweenSales);
-        console.log("Solidity Presale Start Time: ", presaleStartTime);
-        console.log("Solidity Sale Start Time: ", saleStartTime);
         emit SaleHasBeenSet(presaleStartTime, saleStartTime);
     }
 
