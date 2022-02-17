@@ -43,7 +43,7 @@ describe("DemoDapp", function() {
     expect(await contract.balanceOf(addr3.address, 0)).to.equal(0)
   })
 
-  it("Sets Sale as active and allows a user to mint 1 bundle and checks balance of contract", async () => {
+  it("Sets Sale as active and allows a user to mint 1 bundle and checks balance of contract, then deactivates sale", async () => {
 
     // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith('presale is active and you are not a VIF or public sale is not active');
 
@@ -59,6 +59,10 @@ describe("DemoDapp", function() {
     expect(await contract.balanceOf(addr1.address, 0)).to.equal(3);
 
     expect(await contract.connect(owner).getBalance()).to.equal("100000000000000000")
+
+    await contract.connect(owner).activateSale();
+    //* reverts with error public sale is not active (Checked)
+    // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Public sale is not active");
 
   })
 
