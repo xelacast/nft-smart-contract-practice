@@ -180,16 +180,37 @@ contract DemoDapp is ERC1155, Ownable, VIF {
     // ------------------------- //
     bool saleIsActive = false;
     bool presaleIsActive = false;
-    uint256 saleStartTime;
 
+    // modifier isSaleActive() {
+    //     if (presaleIsActive) {
+    //         require(
+    //             addressToVIF[msg.sender] > 0,
+    //             "Presale is active but you're are not a VIF"
+    //         );
+    //     } else {
+    //         require(saleIsActive, "Public sale is not active");
+    //     }
+    //     _;
+    // }
+
+    /// @dev uses block time stamp to start presale and sale based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales) saleTime will be set with _presaleStartTime+_timeBetweenSales
     modifier isSaleActive() {
-        if (presaleIsActive) {
+        console.log("Inside isSaleActive ", block.timestamp);
+        console.log("presale Start Time", presaleStartTime);
+        require(block.timestamp > presaleStartTime, "Presale has not started");
+        if (
+            block.timestamp > presaleStartTime &&
+            block.timestamp < saleStartTime
+        ) {
             require(
                 addressToVIF[msg.sender] > 0,
-                "Presale is active but you're are not a VIF"
+                "Presale is active but you're are not a VIF, wait for public sale"
             );
-        } else {
-            require(saleIsActive, "Public sale is not active");
+            // } else {
+            //     require(
+            //         block.timestamp > saleStartTime,
+            //         "Public sale is not active"
+            //     );
         }
         _;
     }
@@ -203,9 +224,30 @@ contract DemoDapp is ERC1155, Ownable, VIF {
         presaleIsActive = !presaleIsActive;
     }
 
-    function setSaleStartTime(uint256 _saleStart) public onlyOwner {
-        // going to use a big number from seconds to when the blocktime is set
-        saleStartTime = _saleStart;
+    function getBlockTime() public view returns (string memory) {
+        string memory blockTime = Strings.toString(block.timestamp);
+        return blockTime;
+    }
+
+    uint256 presaleStartTime;
+    uint256 saleStartTime;
+
+    /// @dev emits after setPresaleStartTime has been set
+    event SaleHasBeenSet(uint256 _presaleStartTime, uint256 _saleStartTime);
+
+    /// @dev sale start time will set x ammount of time after presale start time. Leads to less dynamics. Can set time and use modifier to start the sale. Sale ends when all bundles are sold.
+    /// @param _presaleStartTime argument must be set in seconds
+    /// @param _timeBetweenSales argument must be set in seconds
+    function setPresaleStartTime(
+        uint256 _presaleStartTime,
+        uint256 _timeBetweenSales
+    ) public onlyOwner {
+        presaleStartTime = _presaleStartTime;
+        saleStartTime = _presaleStartTime + _timeBetweenSales;
+        console.log("Time between sales ", _timeBetweenSales);
+        console.log("Solidity Presale Start Time: ", presaleStartTime);
+        console.log("Solidity Sale Start Time: ", saleStartTime);
+        emit SaleHasBeenSet(presaleStartTime, saleStartTime);
     }
 
     // price is set in wei this is 0.1 ether

@@ -16,7 +16,16 @@
        url: API_URL,
        accounts: [`0x${PRIVATE_KEY}`]
      }
-   }
+   },
+   settings: {
+    optimizer: {
+      enabled: true,
+      runs: 200
+    }
+  },
+  mocha: {
+    timeout: 400000
+  }
   //  gasReporter: {
   //   currency: 'CHF',
   //   gasPrice: 168

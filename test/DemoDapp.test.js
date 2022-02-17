@@ -1,6 +1,7 @@
 const { expect } = require("chai");
 const { BigNumber } = require("ethers");
 const { ethers } = require("hardhat");
+const { setTimeout } = require("timers/promises");
 
 describe("DemoDapp", function() {
   let owner, addr1, addr2, addr3, Contract, contract;
@@ -87,31 +88,85 @@ describe("DemoDapp", function() {
 
   })
 
-  it("Sets a whitelist member, checks it, resets whitelist mapping, sets again, checks and deletes.", async () => {
-    expect(await contract.connect(owner).getVIFLeft()).to.equal(500)
-    await contract.connect(owner).setVIF([addr1.address, addr2.address]);
-    expect(await contract.getVIF(addr1.address)).to.equal(1);
-    expect(await contract.getVIF(addr2.address)).to.equal(1);
-    expect(await contract.getVIF(addr3.address)).to.equal(0);
-    expect(await contract.connect(owner).getVIFLeft()).to.equal(498)
+  // it("Sets a whitelist member, checks it, resets whitelist mapping, sets again, checks and deletes.", async () => {
+  //   expect(await contract.connect(owner).getVIFLeft()).to.equal(500)
+  //   await contract.connect(owner).setVIF([addr1.address, addr2.address]);
+  //   expect(await contract.getVIF(addr1.address)).to.equal(1);
+  //   expect(await contract.getVIF(addr2.address)).to.equal(1);
+  //   expect(await contract.getVIF(addr3.address)).to.equal(0);
+  //   expect(await contract.connect(owner).getVIFLeft()).to.equal(498)
 
-    await contract.connect(owner).resetVIF(499);
-    expect(await contract.getVIF(addr1.address)).to.equal(0);
-    expect(await contract.getVIF(addr2.address)).to.equal(0);
-    expect(await contract.getVIF(addr3.address)).to.equal(0);
+  //   await contract.connect(owner).resetVIF(499);
+  //   expect(await contract.getVIF(addr1.address)).to.equal(0);
+  //   expect(await contract.getVIF(addr2.address)).to.equal(0);
+  //   expect(await contract.getVIF(addr3.address)).to.equal(0);
 
-    // * Second Setting
-    expect(await contract.connect(owner).getVIFLeft()).to.equal(499)
-    await contract.connect(owner).setVIF([addr1.address, addr3.address]);
-    expect(await contract.connect(owner).getVIFLeft()).to.equal(497)
-    expect(await contract.getVIF(addr1.address)).to.equal(1);
-    expect(await contract.getVIF(addr2.address)).to.equal(0);
-    expect(await contract.getVIF(addr3.address)).to.equal(1);
+  //   // * Second Setting
+  //   expect(await contract.connect(owner).getVIFLeft()).to.equal(499)
+  //   await contract.connect(owner).setVIF([addr1.address, addr3.address]);
+  //   expect(await contract.connect(owner).getVIFLeft()).to.equal(497)
+  //   expect(await contract.getVIF(addr1.address)).to.equal(1);
+  //   expect(await contract.getVIF(addr2.address)).to.equal(0);
+  //   expect(await contract.getVIF(addr3.address)).to.equal(1);
 
-    await contract.connect(owner).resetVIF(23);
-    expect(await contract.connect(owner).getVIFLeft()).to.equal(23)
-    expect(await contract.getVIF(addr1.address)).to.equal(0);
-    expect(await contract.getVIF(addr2.address)).to.equal(0);
-    expect(await contract.getVIF(addr3.address)).to.equal(0);
+  //   await contract.connect(owner).resetVIF(23);
+  //   expect(await contract.connect(owner).getVIFLeft()).to.equal(23)
+  //   expect(await contract.getVIF(addr1.address)).to.equal(0);
+  //   expect(await contract.getVIF(addr2.address)).to.equal(0);
+  //   expect(await contract.getVIF(addr3.address)).to.equal(0);
+  // })
+
+  it("Checks new isSaleActive() based on setting a presale start time and inbetween sales time", async () => {
+    let now = new Date;
+    beforePresale = Math.floor(now.getTime() / 1000);
+    presale = beforePresale + 30;
+    sale = 30;
+    console.log("Time now: ", beforePresale);
+    console.log("Presale time: ", presale);
+    console.log("Public sale time: ", sale);
+    console.log("Block Time from function call: ", await contract.getBlockTime())
+
+    await contract.connect(owner).setVIF([addr1.address]);
+    await contract.connect(owner).setPresaleStartTime(presale, sale);
+
+    //* revert with presale not active //!Works!
+    try {
+      expect(await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Presale is not active");
+    } catch(error) {
+      // its going to throw this error no matter what
+      console.log("presale not active", error)
+    }
+
+    // 61 seconds from now the presale will be active and addr2 is not whitelisted so itll revert //* with presale is active but you're not a VIF
+
+    // with a 15 second increase of time it takes two js seconds for 15 blocktime seconds
+    await setTimeout(30000);
+    now = new Date;
+    timeTimeout = Math.floor(now.getTime() / 1000);
+    console.log("First Timeout js time: ",timeTimeout)
+
+    try {
+      expect(await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Presale is active but you're are not a VIF, wait for public sale")
+
+    } catch(error) {
+      console.log("not whitelisted error", error)
+    }
+
+    // no error here becasue addr1 is on the whitelist
+    await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")});
+
+    //* reverts with presale is active but you're not a VIF, wait for public sale
+    try {
+      await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")});
+
+    } catch(error) {
+      console.log("Not white listed member error", error);
+    }
+
+    console.log("before 2nd timeout")
+    await setTimeout(40000)
+    await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")});
+    console.log("After second timeout and mint ")
+
   })
 })
