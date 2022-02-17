@@ -4,7 +4,7 @@
 
  require('dotenv').config();
  require('@nomiclabs/hardhat-waffle');
- require('hardhat-gas-reporter')
+//  require('hardhat-gas-reporter')
 
  const { API_URL, PRIVATE_KEY } = process.env;
  module.exports = {
@@ -16,10 +16,10 @@
        url: API_URL,
        accounts: [`0x${PRIVATE_KEY}`]
      }
-   },
-   gasReporter: {
-    currency: 'CHF',
-    gasPrice: 168
    }
+  //  gasReporter: {
+  //   currency: 'CHF',
+  //   gasPrice: 168
+  //  }
  };
 
