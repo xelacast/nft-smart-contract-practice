@@ -2,20 +2,24 @@
 
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+
+// must be revamped for gas optimization
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+
 import "hardhat/console.sol";
 import "./VIF.sol";
 
-contract DemoDapp is ERC1155, Ownable, VIF {
+contract DemoDapp is ERC1155, Ownable, VIF, ReentrancyGuard {
     uint256 constant receiptTokenId = 0;
     uint256 receiptTotalSupply = 3000;
     uint256 fruitTokenId = 1; // first season will go to 4000
     uint256 fourInOneTokenId = 100001; // first season will go to 101000
 
-    uint256 giveaways = 250;
-    uint256 bundleSupply = 750;
+    uint256 giveaways = 123;
+    uint256 bundleSupply = 877;
 
     event IncreaseReceiptSupply(address _sender, uint256 _supply);
 
@@ -25,7 +29,7 @@ contract DemoDapp is ERC1155, Ownable, VIF {
     constructor(string memory uri) ERC1155(uri) {}
 
     // must add noreentry to here and cutee exchange
-    function mintBundle() external payable isSaleActive {
+    function mintBundle() external payable isSaleActive nonReentrant {
         require(
             msg.value >= 0.1 ether,
             "Not enough ether was sent to transaction"
@@ -35,11 +39,6 @@ contract DemoDapp is ERC1155, Ownable, VIF {
             "Cannot purchase more than one batch mint per wallet"
         );
         require(bundleSupply > 0, "All Batches have been minted");
-        // i dont know if this is relevant or not below
-        require(
-            msg.sender == tx.origin,
-            "Contract calls cannot mint our supply"
-        );
 
         uint256[] memory batchMintAmmount = new uint256[](6);
         uint256[] memory idHolder = new uint256[](6);
@@ -111,7 +110,7 @@ contract DemoDapp is ERC1155, Ownable, VIF {
         emit IncreaseReceiptSupply(msg.sender, _supply);
     }
 
-    // probably dont need this theres no outside test cases
+    /// @dev getBundleBalance is used to check if the sender has already minted a bundle. Stops from nft wallet swapping
     function getBundleBalance() public view returns (uint256) {
         return bundleBalance[msg.sender];
     }
@@ -138,7 +137,7 @@ contract DemoDapp is ERC1155, Ownable, VIF {
         uint256 _fruitTokenId,
         uint256 _fourInOneTokenId,
         uint256 _quadrant
-    ) public {
+    ) public nonReentrant {
         // if quadrant is a large number send it to the oracle and it will do modulus on it. This will save gas for exchange
         address[] memory accounts = new address[](3);
         uint256[] memory balances = new uint256[](3);
@@ -163,6 +162,30 @@ contract DemoDapp is ERC1155, Ownable, VIF {
         // return oracle boolean.
     }
 
+    // TODO create uri Section for reveal and nonreveal
+    // ------------------------- //
+    /// @dev uri section       ///
+    // ------------------------- //
+    // must change the erc1155 contract data and integrate it into this contract to have a prereveal and no constructor.
+
+    // how am i going to set prereveal data uris for all tokens that have already been minted? seperate uri for second season. This means i will have to make the meta data for the second season dynamic.
+
+    string uri;
+
+    // must set this to correspond with marketplace and eip1155
+    function uri(uint256 _tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        // TODO find a way to fill with 64 0s
+        return string(abi.encode(_uri, Strings.toString(_tokenId), ".json"));
+    }
+
+    // function preRevealUri     {}
+
     // ------------------------- //
     /// @dev sale section       ///
     // ------------------------- //
@@ -184,33 +207,26 @@ contract DemoDapp is ERC1155, Ownable, VIF {
         _;
     }
 
-    function activateSale() public onlyOwner {
-        saleIsActive = !saleIsActive;
-    }
-
-    // presale is acivated for whitelist members only
-    function activatePreSale() public onlyOwner {
-        presaleIsActive = !presaleIsActive;
-    }
-
-    function getBlockTime() public view returns (string memory) {
-        string memory blockTime = Strings.toString(block.timestamp);
-        return blockTime;
-    }
-
     uint256 presaleStartTime;
     uint256 saleStartTime;
 
-    /// @dev emits after setPresaleStartTime has been set
+    /// @dev emits after setPresaleStartTime has been called with time parameters
     event SaleHasBeenSet(uint256 _presaleStartTime, uint256 _saleStartTime);
 
     /// @dev sale start time will set x ammount of time after presale start time. Leads to less dynamics. Can set time and use modifier to start the sale. Sale ends when all bundles are sold.
     /// @param _presaleStartTime argument must be set in seconds
     /// @param _timeBetweenSales argument must be set in seconds
+    /// @dev can define the entirety of our season sale in this one function call?
+    // uint256 _bundleSupply,
+    // uint256 _giveaways,
+    // uint256 _vifSpots
     function setPresaleStartTime(
         uint256 _presaleStartTime,
         uint256 _timeBetweenSales
     ) public onlyOwner {
+        // bundleSupply = _bundleSupply;
+        // giveaways = _giveaways;
+        // vifSpots = _vifSpots;
         presaleStartTime = _presaleStartTime;
         saleStartTime = _presaleStartTime + _timeBetweenSales;
         emit SaleHasBeenSet(presaleStartTime, saleStartTime);

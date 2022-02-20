@@ -44,49 +44,49 @@ describe("DemoDapp", function() {
     expect(await contract.balanceOf(addr3.address, 0)).to.equal(0)
   })
 
-  it("Sets Sale as active and allows a user to mint 1 bundle and checks balance of contract, then deactivates sale", async () => {
+  // it("Sets Sale as active and allows a user to mint 1 bundle and checks balance of contract, then deactivates sale", async () => {
 
-    // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith('presale is active and you are not a VIF or public sale is not active');
+  //   // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith('presale is active and you are not a VIF or public sale is not active');
 
-    await contract.connect(owner).activateSale();
-    //! reverts but does not work with hardhat local enviroment
-    // expect(await contract.connect(addr1).activateSale()).to.be.reverted;
-    await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")});
-    expect(await contract.balanceOf(addr1.address, 1)).to.equal(1);
-    expect(await contract.balanceOf(addr1.address, 2)).to.equal(1);
-    expect(await contract.balanceOf(addr1.address, 3)).to.equal(1);
-    expect(await contract.balanceOf(addr1.address, 4)).to.equal(1);
-    expect(await contract.balanceOf(addr1.address, 100001)).to.equal(1);
-    expect(await contract.balanceOf(addr1.address, 0)).to.equal(3);
+  //   await contract.connect(owner).activateSale();
+  //   //! reverts but does not work with hardhat local enviroment
+  //   // expect(await contract.connect(addr1).activateSale()).to.be.reverted;
+  //   await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")});
+  //   expect(await contract.balanceOf(addr1.address, 1)).to.equal(1);
+  //   expect(await contract.balanceOf(addr1.address, 2)).to.equal(1);
+  //   expect(await contract.balanceOf(addr1.address, 3)).to.equal(1);
+  //   expect(await contract.balanceOf(addr1.address, 4)).to.equal(1);
+  //   expect(await contract.balanceOf(addr1.address, 100001)).to.equal(1);
+  //   expect(await contract.balanceOf(addr1.address, 0)).to.equal(3);
 
-    expect(await contract.connect(owner).getBalance()).to.equal("100000000000000000")
+  //   expect(await contract.connect(owner).getBalance()).to.equal("100000000000000000")
 
-    await contract.connect(owner).activateSale();
-    //* reverts with error public sale is not active (Checked)
-    // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Public sale is not active");
+  //   await contract.connect(owner).activateSale();
+  //   //* reverts with error public sale is not active (Checked)
+  //   // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Public sale is not active");
 
-  })
+  // })
 
-  it("Activates presale, Sets a whitelist member checks the purchase ability, and checks the purchase ability of a non whitelist member, deactivates presale and checks again", async () => {
-    // try buying mint //* Works not in hardhat env
-    // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Public sale is not active");
-    // activate presale
-    await contract.connect(owner).activatePreSale();
-    // set a member to whitelist
-    await contract.connect(owner).setVIF([addr1.address]);
-    // buy with whitelist member
-    await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})
-    // buy with non-whitelist member //* passing but not in hardhat env
-    // expect(await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Presale is acttive but you're not a VIF");
-    // deactivate presale
-    await contract.connect(owner).activatePreSale();
-    // buy with whitelist member //* passing but not in hardhat env
-    // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWIth("Public sale is not active");
-    // buy with non-whitelist member //* passing but not in hardhat env
-    // expect(await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWIth("Public sale is not active");
-    expect(await contract.balanceOf(addr1.address, 0)).to.equal(3);
+  // it("Activates presale, Sets a whitelist member checks the purchase ability, and checks the purchase ability of a non whitelist member, deactivates presale and checks again", async () => {
+  //   // try buying mint //* Works not in hardhat env
+  //   // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Public sale is not active");
+  //   // activate presale
+  //   await contract.connect(owner).activatePreSale();
+  //   // set a member to whitelist
+  //   await contract.connect(owner).setVIF([addr1.address]);
+  //   // buy with whitelist member
+  //   await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})
+  //   // buy with non-whitelist member //* passing but not in hardhat env
+  //   // expect(await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Presale is acttive but you're not a VIF");
+  //   // deactivate presale
+  //   await contract.connect(owner).activatePreSale();
+  //   // buy with whitelist member //* passing but not in hardhat env
+  //   // expect(await contract.connect(addr1).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWIth("Public sale is not active");
+  //   // buy with non-whitelist member //* passing but not in hardhat env
+  //   // expect(await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWIth("Public sale is not active");
+  //   expect(await contract.balanceOf(addr1.address, 0)).to.equal(3);
 
-  })
+  // })
 
   // it("Sets a whitelist member, checks it, resets whitelist mapping, sets again, checks and deletes.", async () => {
   //   expect(await contract.connect(owner).getVIFLeft()).to.equal(500)
@@ -119,12 +119,12 @@ describe("DemoDapp", function() {
   it("Checks new isSaleActive() based on setting a presale start time and inbetween sales time", async () => {
     let now = new Date;
     beforePresale = Math.floor(now.getTime() / 1000);
-    presale = beforePresale + 30;
-    sale = 30;
-    console.log("Time now: ", beforePresale);
-    console.log("Presale time: ", presale);
-    console.log("Public sale time: ", sale);
-    console.log("Block Time from function call: ", await contract.getBlockTime())
+    presale = beforePresale + 15;
+    sale = 15;
+    // console.log("Time now: ", beforePresale);
+    // console.log("Presale time: ", presale);
+    // console.log("Public sale time: ", sale);
+    // console.log("Block Time from function call: ", await contract.getBlockTime())
 
     await contract.connect(owner).setVIF([addr1.address]);
     await contract.connect(owner).setPresaleStartTime(presale, sale);
@@ -140,10 +140,10 @@ describe("DemoDapp", function() {
     // 61 seconds from now the presale will be active and addr2 is not whitelisted so itll revert //* with presale is active but you're not a VIF
 
     // with a 15 second increase of time it takes two js seconds for 15 blocktime seconds
-    await setTimeout(30000);
-    now = new Date;
-    timeTimeout = Math.floor(now.getTime() / 1000);
-    console.log("First Timeout js time: ",timeTimeout)
+    await setTimeout(15000);
+    // now = new Date;
+    // timeTimeout = Math.floor(now.getTime() / 1000);
+    // console.log("First Timeout js time: ",timeTimeout)
 
     try {
       expect(await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")})).to.be.revertedWith("Presale is active but you're are not a VIF, wait for public sale")
@@ -163,8 +163,9 @@ describe("DemoDapp", function() {
       console.log("Not white listed member error", error);
     }
 
-    console.log("before 2nd timeout")
-    await setTimeout(40000)
+    // console.log("before 2nd timeout")
+    await setTimeout(20000)
+    // unwhite list account
     await contract.connect(addr2).mintBundle({value: ethers.utils.parseEther("0.1")});
     console.log("After second timeout and mint ")
 
