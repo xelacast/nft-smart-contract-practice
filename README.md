@@ -39,4 +39,10 @@ Metadata creation must be excellent for 4in1s to correspond to actual pictures a
 
 
 What have I tested?
+#TODOS
+- test everything and report numbers on ropsten testnet
+
+#TODOS
+-Season reset all in one call
+-Set Sale time so its openended setSaleEndTime?
 

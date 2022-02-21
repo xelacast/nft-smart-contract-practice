@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 import "./VIF.sol";
 
-contract DemoDapp is ERC1155, Ownable, VIF, ReentrancyGuard {
+contract DemoDapp is ERC1155, Ownable, ReentrancyGuard {
     uint256 constant receiptTokenId = 0;
     uint256 receiptTotalSupply = 3000;
     uint256 fruitTokenId = 1; // first season will go to 4000
@@ -170,7 +170,7 @@ contract DemoDapp is ERC1155, Ownable, VIF, ReentrancyGuard {
 
     // how am i going to set prereveal data uris for all tokens that have already been minted? seperate uri for second season. This means i will have to make the meta data for the second season dynamic.
 
-    string uri;
+    string _uri;
 
     // must set this to correspond with marketplace and eip1155
     function uri(uint256 _tokenId)
@@ -237,5 +237,39 @@ contract DemoDapp is ERC1155, Ownable, VIF, ReentrancyGuard {
 
     function setPricePerBundle(uint256 _gwei) public onlyOwner {
         pricePerBundle = _gwei;
+    }
+
+    // ------------------------- //
+    /// @dev VIF section       ///
+    // ------------------------- //
+    mapping(address => uint256) addressToVIF;
+    address[] veryImportantFruit;
+    uint256 VIFCount = 500;
+
+    // this is an expensive task to run
+    function setVIF(address[] memory _vifs) public onlyOwner {
+        require(VIFCount >= _vifs.length, "Not Enough VIF spots left");
+        for (uint256 i = 0; i < _vifs.length; i++) {
+            addressToVIF[_vifs[i]] = 1;
+            veryImportantFruit.push(_vifs[i]);
+            // console.log(addressToVIF[_VIFs[i]]);
+        }
+        VIFCount = VIFCount - _vifs.length;
+    }
+
+    function resetVIF(uint256 _VIFCount) public onlyOwner {
+        for (uint256 i = 0; i < veryImportantFruit.length; i++) {
+            addressToVIF[veryImportantFruit[i]] = 0;
+        }
+        delete veryImportantFruit;
+        VIFCount = _VIFCount;
+    }
+
+    function getVIF(address _address) public view onlyOwner returns (uint256) {
+        return addressToVIF[_address];
+    }
+
+    function getVIFLeft() public view onlyOwner returns (uint256) {
+        return VIFCount;
     }
 }

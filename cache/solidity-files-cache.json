@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/DemoDapp.sol": {
-      "lastModificationDate": 1645139924580,
-      "contentHash": "a9fc2ebacc3a013cbabea10fa5996ba6",
+      "lastModificationDate": 1645466112560,
+      "contentHash": "05640ad86c5700eb41493dab6c2c0c87",
       "sourceName": "contracts/DemoDapp.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -29,9 +29,10 @@
         }
       },
       "imports": [
+        "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+        "@openzeppelin/contracts/utils/Strings.sol",
         "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
         "@openzeppelin/contracts/access/Ownable.sol",
-        "@openzeppelin/contracts/utils/Strings.sol",
         "hardhat/console.sol",
         "./VIF.sol"
       ],
@@ -445,8 +446,8 @@
       ]
     },
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/VIF.sol": {
-      "lastModificationDate": 1645122057580,
-      "contentHash": "cb40186e27df576ac3c30018100e5861",
+      "lastModificationDate": 1645466090300,
+      "contentHash": "0be5db5365e21f3b04c48530f4524463",
       "sourceName": "contracts/VIF.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -471,14 +472,383 @@
           }
         }
       },
+      "imports": [],
+      "versionPragmas": [],
+      "artifacts": []
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol": {
+      "lastModificationDate": 1644601169440,
+      "contentHash": "92f9448b23a90ea3bb932ee55cc3ccce",
+      "sourceName": "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ReentrancyGuard"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/DemoOptimized.sol": {
+      "lastModificationDate": 1645466381140,
+      "contentHash": "659cecddcca61c170baae7774c70724e",
+      "sourceName": "contracts/DemoOptimized.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
       "imports": [
-        "@openzeppelin/contracts/access/Ownable.sol"
+        "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+        "@openzeppelin/contracts/utils/Strings.sol",
+        "@openzeppelin/contracts/utils/Context.sol",
+        "./tokens/IERC1155MetadataURI.sol",
+        "./tokens/ERC1155.sol",
+        "./utils/Ownable.sol",
+        "hardhat/console.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
       ],
       "artifacts": [
-        "VIF"
+        "DemoOptimized"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/tokens/IERC1155MetadataURI.sol": {
+      "lastModificationDate": 1645465505800,
+      "contentHash": "42ebf434917ba17c9152ec05241eb5ed",
+      "sourceName": "contracts/tokens/IERC1155MetadataURI.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IERC1155.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC1155MetadataURI"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/tokens/ERC1155.sol": {
+      "lastModificationDate": 1645466265750,
+      "contentHash": "38b5c3c9332060fe8e126520585ba3e8",
+      "sourceName": "contracts/tokens/ERC1155.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IERC1155.sol",
+        "./IERC1155Receiver.sol",
+        "./IERC1155MetadataURI.sol",
+        "../utils/Address.sol",
+        "@openzeppelin/contracts/utils/Context.sol",
+        "../utils/introspection/ERC165.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ERC1155"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/utils/Ownable.sol": {
+      "lastModificationDate": 1645466019080,
+      "contentHash": "be48fedd086037bc499f1ace40861336",
+      "sourceName": "contracts/utils/Ownable.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Ownable"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/tokens/IERC1155.sol": {
+      "lastModificationDate": 1645465332410,
+      "contentHash": "a79864a8f91dbdcbaaa4fb466f1304b9",
+      "sourceName": "contracts/tokens/IERC1155.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../utils/introspection/IERC165.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC1155"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/utils/introspection/IERC165.sol": {
+      "lastModificationDate": 1645464816690,
+      "contentHash": "03e6768535ac4da0e9756f1d8a4a018a",
+      "sourceName": "contracts/utils/introspection/IERC165.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC165"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/tokens/IERC1155Receiver.sol": {
+      "lastModificationDate": 1645465132240,
+      "contentHash": "59513e631e65d93230915c8b34774e18",
+      "sourceName": "contracts/tokens/IERC1155Receiver.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../utils/introspection/IERC165.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC1155Receiver"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/utils/Address.sol": {
+      "lastModificationDate": 1645464655890,
+      "contentHash": "f827bc468d82374e53c5dff889338e80",
+      "sourceName": "contracts/utils/Address.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.1"
+      ],
+      "artifacts": [
+        "Address"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/utils/introspection/ERC165.sol": {
+      "lastModificationDate": 1645464796110,
+      "contentHash": "e8592548553f70a57b18e20c6a6fd277",
+      "sourceName": "contracts/utils/introspection/ERC165.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IERC165.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ERC165"
       ]
     }
   }
