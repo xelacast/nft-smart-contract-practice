@@ -28,11 +28,22 @@ contract DemoOptimized is
     uint256 bundleSupply = 877;
 
     event IncreaseReceiptSupply(address _sender, uint256 _supply);
+    event IncreaseBundleSupply(address _sender, uint256 _supply);
+    // I could have a setSeason Event? and a setSeason function
 
     mapping(address => uint256) private bundleBalance; // stop people from trading out and buying if nfts are traded to another account the account traded to can still buy
     mapping(uint256 => address) private tokenIdToAddress; // used for cuteeExchange. can use balaneceOf Instead
 
-    constructor() ERC1155() {}
+    constructor(string memory uri, string memory uriHidden) ERC1155() {
+        // Season 1 toknenId Parameters for URI
+        fruitTokenIdLowerParam = 0;
+        fruitTokenIdUpperParam = 99999;
+        fourInOneTokenIdLowerParam = 100000;
+        fourInOneTokenIdUpperParam = 999999;
+        /// @dev upon creation of the contract uri and hiddenUri are set and never to changed. uri is a dns that points to an ipfs
+        _uri = uri;
+        _uriHidden = uriHidden;
+    }
 
     // must add noreentry to here and cutee exchange
     function mintBundle() external payable isSaleActive nonReentrant {
@@ -176,7 +187,25 @@ contract DemoOptimized is
 
     // how am i going to set prereveal data uris for all tokens that have already been minted? seperate uri for second season. This means i will have to make the meta data for the second season dynamic.
 
-    string _uri;
+    string private _uri;
+    string private _uriHidden;
+
+    /// @dev lower params will change with seasons
+    uint256 fruitTokenIdLowerParam;
+    uint256 fourInOneTokenIdLowerParam;
+
+    /// @dev upper params must not change
+    uint256 fruitTokenIdUpperParam;
+    uint256 fourInOneTokenIdUpperParam;
+
+    /// @dev to reveal the current season Pictures must change the params
+    function setSeasonLowerParams(
+        uint256 _fruitTokenIdLowerParam,
+        uint256 _fourInOneTokenIdLowerParam
+    ) public onlyOwner {
+        fruitTokenIdLowerParam = _fruitTokenIdLowerParam;
+        fourInOneTokenIdLowerParam = _fourInOneTokenIdLowerParam;
+    }
 
     // must set this to correspond with marketplace and eip1155
     // i can change this and check for tokenIds and change the season token ids to change the uri
@@ -187,8 +216,22 @@ contract DemoOptimized is
         override
         returns (string memory)
     {
-        // TODO find a way to fill with 64 0s
-        return string(abi.encode(_uri, Strings.toString(_tokenId), ".json"));
+        // TODO
+        // if tokenId > n && tokenId < m || tokenId > x && tokenId < y;
+        // this will be a hook call
+        if (
+            (_tokenId > fruitTokenIdLowerParam &&
+                _tokenId < fruitTokenIdUpperParam) ||
+            (_tokenId > fourInOneTokenIdLowerParam &&
+                _tokenId < fourInOneTokenIdUpperParam)
+        ) {
+            return _uriHidden;
+        } else {
+            return
+                string(
+                    abi.encodePacked(_uri, Strings.toString(_tokenId), ".json")
+                );
+        }
     }
 
     /// TODO how do i set URI's for future release to be hidden. Or do I do that? Yes becuase of presales.
