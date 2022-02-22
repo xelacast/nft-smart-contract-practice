@@ -27,23 +27,41 @@ async function main() {
   await contract.connect(owner).setPresaleStartTime(0,1);
   await contract.connect(owner).mintBundle({value: utils.parseEther("0.1")});
 
-  console.log(await contract.balanceOf(owner.address, 0));
-  await contract.connect(addr1).safeTransferFrom(addr1.address, owner.address, 0, 3, []);
-  console.log("6",await contract.balanceOf(owner.address, 0));
-  console.log("0",await contract.balanceOf(addr1.address, 0));
+  // console.log(await contract.balanceOf(owner.address, 0));
+  // await contract.connect(addr1).safeTransferFrom(addr1.address, owner.address, 0, 3, []);
+  // console.log("6",await contract.balanceOf(owner.address, 0));
+  // console.log("0",await contract.balanceOf(addr1.address, 0));
 
+  // console.log("1",await contract.balanceOf(addr1.address, 1));
+  // console.log("0",await contract.balanceOf(owner.address, 1));
+  // await contract.connect(addr1).safeTransferFrom(addr1.address, owner.address, 1, 1, []);
+  // console.log("0",await contract.balanceOf(addr1.address, 1));
+  // console.log("1",await contract.balanceOf(owner.address, 1));
+
+  // // !WORKS!
+  // // test if a address does not have a mapping
+  // console.log("1",await contract.balanceOf(addr1.address, 4));
+  // console.log("0",await contract.balanceOf(addr3.address, 4));
+  // await contract.connect(addr1).safeTransferFrom(addr1.address, addr3.address, 4, 1, []);
+  // console.log("0",await contract.balanceOf(addr1.address, 4));
+  // console.log("1",await contract.balanceOf(addr3.address, 4));
+
+  // test _safeBatchTransferFrom
+  console.log("3",await contract.balanceOf(addr1.address, 0));
   console.log("1",await contract.balanceOf(addr1.address, 1));
-  console.log("0",await contract.balanceOf(owner.address, 1));
-  await contract.connect(addr1).safeTransferFrom(addr1.address, owner.address, 1, 1, []);
-  console.log("0",await contract.balanceOf(addr1.address, 1));
-  console.log("1",await contract.balanceOf(owner.address, 1));
-
-  // !WORKS!
-  // test if a address does not have a mapping
   console.log("1",await contract.balanceOf(addr1.address, 4));
+  console.log("0",await contract.balanceOf(addr3.address, 0));
+  console.log("0",await contract.balanceOf(addr3.address, 1));
   console.log("0",await contract.balanceOf(addr3.address, 4));
-  await contract.connect(addr1).safeTransferFrom(addr1.address, addr3.address, 4, 1, []);
+  await contract.connect(addr1).safeBatchTransferFrom(addr1.address, addr3.address, [0, 1, 4], [2, 1, 1], []);
+  // await contract.connect(addr1).safeTransferFrom(addr1.address, addr3.address, 0, 2, []);
+  // await contract.connect(addr1).safeTransferFrom(addr1.address, addr3.address, 1, 1, []);
+  // await contract.connect(addr1).safeTransferFrom(addr1.address, addr3.address, 4, 1, []);
+  console.log("1",await contract.balanceOf(addr1.address, 0));
+  console.log("0",await contract.balanceOf(addr1.address, 1));
   console.log("0",await contract.balanceOf(addr1.address, 4));
+  console.log("2",await contract.balanceOf(addr3.address, 0));
+  console.log("1",await contract.balanceOf(addr3.address, 1));
   console.log("1",await contract.balanceOf(addr3.address, 4));
 
   // console.log(await contract.balanceOf(owner.address, 9));
@@ -58,11 +76,6 @@ async function main() {
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
