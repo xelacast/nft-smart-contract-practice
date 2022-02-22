@@ -73,3 +73,127 @@ The URI will be chosen based on four parameters. The fruitTokenId Upper paramete
 Upon Creation of the Contract the hidden uri (uriHidden), and actual uri will be set to never needed to be changed again. Both are DNS links that point to ipfs data so we can update data in the future.
   - NOTE: BIG PROBLEM someone can look up the reveals of future season if they have the CID for the previous season. Unless we do not upload them until a few hours before the reveal.
   - NOTE: Problem Fix? set no upper limit to x amount and everything above that will have a hidden.json metadata until the lower parameter is brought forth. Upper params are set because we know all token IDs and how many we will create. This creates less dependecies that can go wrong but this does not solve the issues of sneaking the URI based on the old DNS unless we set all tokenIds for the future seasons and then change the IPFS it points to at the start of everyseason. I can create a javascript script to check for a date and then send a post request to the DNS changing all ipfs in the season parameters.
+
+
+#GasOptimization
+Inside the OpenZeppelin ERC1155 contract there is a mapping of _balances. It looks like this.
+  mapping(uint256 => mapping(address => uint256)) private _balances;
+When this mapping is incremented on and used in the MintBatch function of the openzeppelin contract it uses a lot of gas. In Hardhat Gas units it uses ~136,000 units for an 8 nft batch mint.
+This can be changed by creating an array of structs that holds 2 pieces of data. The address of the owner and an array of token ids they own. or a mapping of the token ids(this will be more expensive). If it is an array of token ids it wouln't be in numerical order and hard to delete unless I incremented over the ids. Using this is more difficult for multiple NFTs and SFTs because there will be more than n ammount of SFTs with the same id value.
+the struct can look like this
+  struct Cutee {
+    address owner;
+    uint256[] tokens;
+  }
+
+  Cutee[] cuties;
+
+  or
+
+  struct Cutee {
+    address owner;
+    mapping(uint256 => uint256) tokenToAmmount;
+  }
+
+  Cutee[] cuties;
+
+The expense of the mapping in the struct is there will be a creation of a Cutee and the mapping will be expensive
+
+TheOtherSide is using a struct of
+  struct Moon {
+    address owner;
+    bool celestialType;
+  }
+and an array of
+  Moon public moons;
+This array holds all the ids of the tokens and the token ids are the indexes of the structs
+  example
+  address owner = moons[tokenId].owner;
+  in their _mint
+    function _mint(address to, uint tokenId) internal {
+      _beforeTokenTransfer(address(0), to);
+      moons.push(Moon(to,false));
+      emit Transfer(address(0), to, tokenId);
+  }
+
+They are mapping a struct to the index of the moons. This requires all indexes to be corresponding with the tokenIds themselves and the corresponding owner. I can use this and put an ammount in the struct.
+ex
+  struct Cutee {
+    address owner;
+    uint256 ammount;
+  }
+
+  Cutee[] cuties;
+
+  _mint() {
+    cuties.push(Cutee(_to, ammount));
+  }
+
+_to is the minting address
+ammount is always one unless specified for the receipts
+
+_mintBatch will require me to push n amount of nfts to the array
+ex
+function _mintBatch(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual {
+        require(to != address(0), "ERC1155: mint to the zero address");
+        require(
+            ids.length == amounts.length,
+            "ERC1155: ids and amounts length mismatch"
+        );
+
+        address operator = _msgSender();
+
+        // this uses 136k gas to mint. ITs a crucial part. Its time to optimize
+        //for (uint256 i = 0; i < ids.length; i++) {
+        //    _balances[ids[i]][to] += amounts[i];
+        //}
+
+        for (uint256 i = 0; i < ids.lenth; i++) {
+          cuties.push(to, ammounts[i]);
+        }
+
+        emit TransferBatch(operator, address(0), to, ids, amounts);
+
+        _doSafeBatchTransferAcceptanceCheck(
+            operator,
+            address(0),
+            to,
+            ids,
+            amounts,
+            data
+        );
+    }
+
+I must change the transfer function to subtract the amount and change the owner.
+
+So all in all the ids of the tokens are mapped to an array corresponding with its index.
+I cant do this. The ammount of tokens for 0 changes per owner and supply changes. Also the token ids of the fourInOnes are 100000 and above.
+I could create a mapping of structs that correspond with the amount of ids owned per owner. The indexes of ids will correspond with the ammount indexes.
+ex
+  struct Cutee {
+    address owner;
+    uint256[] ids;
+    uint256[] ammounts;
+  }
+  mapping(address => Cutee) addressToOwners;
+
+EDIT 02/22/2022
+Use two arrays and one struct
+One array for fruitIds
+one array for fourInOneIds
+indexes of array correspond with the token id
+zero index of both arrays are filled with filler data
+struct holds the owner.
+How does the receipt value get implemented? id of receipt is 0, multiple users have multiple receipts. Do i need to map this?
+
+TODOS for implementation
+
+#Website Security
+  Bot Detector. Only one account address associated with one ip. Look at the ropsten ether faucet source code for reference. They put a 2 week limit on wallet address and the ip associated with them. I can put the limit on the wallets until the next sale. website(https://github.com/wu4f/ropsten_faucet). This technique will stop user from switching their accounts on their wallets to pay for more than one mint. A work around is to use a vpn and another account address.
+
+#Contract Security

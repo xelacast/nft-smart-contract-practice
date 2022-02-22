@@ -512,8 +512,8 @@
       ]
     },
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/DemoOptimized.sol": {
-      "lastModificationDate": 1645471552620,
-      "contentHash": "f99be7fd154dcd9093024938cb113039",
+      "lastModificationDate": 1645478160260,
+      "contentHash": "c439379c863cdc9cf87e83995a820b3a",
       "sourceName": "contracts/DemoOptimized.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -592,8 +592,8 @@
       ]
     },
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/tokens/ERC1155.sol": {
-      "lastModificationDate": 1645466265750,
-      "contentHash": "38b5c3c9332060fe8e126520585ba3e8",
+      "lastModificationDate": 1645482458860,
+      "contentHash": "8d0d5d5d541423924fd14d09fdb835ff",
       "sourceName": "contracts/tokens/ERC1155.sol",
       "solcConfig": {
         "version": "0.8.4",

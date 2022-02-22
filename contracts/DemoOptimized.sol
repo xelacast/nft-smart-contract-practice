@@ -242,8 +242,6 @@ contract DemoOptimized is
     // ------------------------- //
     /// @dev sale section       ///
     // ------------------------- //
-    bool saleIsActive = false;
-    bool presaleIsActive = false;
 
     /// @dev uses block time stamp to start presale and sale based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales) saleTime will be set with _presaleStartTime+_timeBetweenSales
     modifier isSaleActive() {

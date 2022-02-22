@@ -1,3 +1,4 @@
+const { utils } = require("ethers");
 const { ethers } = require("hardhat");
 
 
@@ -19,10 +20,14 @@ async function main() {
   [owner, addr1, addr2] = await ethers.getSigners();
 
   console.log("Contract deployed with id: ", contract.address);
+  await contract.connect(owner).setSeasonLowerParams(4000, 101000);
 
   await contract.connect(owner).giveawayMintBatch([addr1.address, addr1.address])
+  await contract.connect(owner).setPresaleStartTime(0,1);
+  await contract.connect(owner).mintBundle({value: utils.parseEther("0.1")});
 
-  console.log(await contract.uri(12));
+  // console.log(await contract.uri(12));
+  console.log(await contract.connect(owner).getBalances(1));
 
 }
 

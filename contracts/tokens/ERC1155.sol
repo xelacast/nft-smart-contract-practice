@@ -21,7 +21,10 @@ contract ERC1155 is Context, ERC165, IERC1155 {
     // this is a library with functions
     using Address for address;
 
+    // TODO
     // Mapping from token ID to account balances
+    // Replace this with a structure that holds the address of the owner
+    // And an array of the tokens that they own
     mapping(uint256 => mapping(address => uint256)) private _balances;
 
     // Mapping from account to operator approvals
@@ -193,7 +196,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
         uint256[] memory ids = _asSingletonArray(id);
         uint256[] memory amounts = _asSingletonArray(amount);
 
-        _beforeTokenTransfer(operator, from, to, ids, amounts, data);
+        // _beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         uint256 fromBalance = _balances[id][from];
         require(
@@ -209,7 +212,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
 
         _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
 
-        _afterTokenTransfer(operator, from, to, ids, amounts, data);
+        // _afterTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     /**
@@ -237,7 +240,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
 
         address operator = _msgSender();
 
-        _beforeTokenTransfer(operator, from, to, ids, amounts, data);
+        // _beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         for (uint256 i = 0; i < ids.length; ++i) {
             uint256 id = ids[i];
@@ -265,7 +268,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
             data
         );
 
-        _afterTokenTransfer(operator, from, to, ids, amounts, data);
+        // _afterTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     /**
@@ -310,7 +313,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
         uint256[] memory ids = _asSingletonArray(id);
         uint256[] memory amounts = _asSingletonArray(amount);
 
-        _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
 
         _balances[id][to] += amount;
         emit TransferSingle(operator, address(0), to, id, amount);
@@ -324,7 +327,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
             data
         );
 
-        _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
     }
 
     /**
@@ -336,6 +339,15 @@ contract ERC1155 is Context, ERC165, IERC1155 {
      * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the
      * acceptance magic value.
      */
+    struct Cutee {
+        address owner;
+    }
+    // NOTE 0 indexed 0 index will be filled to have exact indexing with token ids
+    Cutee[] fruitsIds;
+    Cutee[] fourInOneIds;
+
+    // mapping(address => Cutee) addressToOwners;
+
     function _mintBatch(
         address to,
         uint256[] memory ids,
@@ -352,9 +364,14 @@ contract ERC1155 is Context, ERC165, IERC1155 {
 
         // _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
 
+        // mapping we are working with
+        // mapping(uint256 => mapping(address => uint256)) private _balances;
+
+        // this uses 136k gas to mint. ITs a crucial part. Its time to optimize
         for (uint256 i = 0; i < ids.length; i++) {
             _balances[ids[i]][to] += amounts[i];
         }
+        addressToOwners[operator] = Cutee(operator, ids, amounts);
 
         emit TransferBatch(operator, address(0), to, ids, amounts);
 
@@ -389,7 +406,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
         uint256[] memory ids = _asSingletonArray(id);
         uint256[] memory amounts = _asSingletonArray(amount);
 
-        _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
+        // _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
 
         uint256 fromBalance = _balances[id][from];
         require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
@@ -399,7 +416,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
 
         emit TransferSingle(operator, from, address(0), id, amount);
 
-        _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
+        // _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
     }
 
     /**
@@ -422,7 +439,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
 
         address operator = _msgSender();
 
-        _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
+        // _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
 
         for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
@@ -440,7 +457,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
 
         emit TransferBatch(operator, from, address(0), ids, amounts);
 
-        _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
+        // _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
     }
 
     /**
