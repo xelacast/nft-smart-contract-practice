@@ -371,7 +371,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
         for (uint256 i = 0; i < ids.length; i++) {
             _balances[ids[i]][to] += amounts[i];
         }
-        addressToOwners[operator] = Cutee(operator, ids, amounts);
+        // addressToOwners[to] = Cutee(operator, ids, amounts);
 
         emit TransferBatch(operator, address(0), to, ids, amounts);
 
