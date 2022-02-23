@@ -91,7 +91,7 @@ contract DemoOptimized is
 
     /// @notice This givaway will not impact the presale and sale to minting limit of 1
     /// @dev the parameter is an array to mint multiple batches at once
-    function giveawayMintBatch(address[] calldata _to) external onlyOwner {
+    function giveawayBundle(address[] calldata _to) external onlyOwner {
         require(giveaways > 0, "Out of Giveaways.");
 
         uint256[] memory batchMintAmmount = new uint256[](6);
@@ -264,7 +264,9 @@ contract DemoOptimized is
     /// @dev emits after setPresaleStartTime has been called with time parameters
     event SaleHasBeenSet(uint256 _presaleStartTime, uint256 _saleStartTime);
 
-    /// @dev sale start time will set x ammount of time after presale start time. Leads to less dynamics. Can set time and use modifier to start the sale. Sale ends when all bundles are sold.
+    /// @dev sale start time will set x ammount of time after presale start time.
+    /// Leads to less dynamics. Can set time and use modifier to start the sale.
+    /// Sale ends when all bundles are sold.
     /// @param _presaleStartTime argument must be set in seconds
     /// @param _timeBetweenSales argument must be set in seconds
     /// @dev can define the entirety of our season sale in this one function call?
