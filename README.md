@@ -37,7 +37,6 @@ Sale Activation
 All token ids shall be used from 0, 1-4000, 10001-101000
 Metadata creation must be excellent for 4in1s to correspond to actual pictures and other tokens
 
-
 What have I tested?
 #TODOS
 - test everything and report numbers on ropsten testnet
@@ -58,9 +57,6 @@ What have I tested?
     - Set receipt count
     - upload fourInOnes and Fruit metaData to ipfs that corresponds with token Ids
   - What does it take to end the season?
-
-
-
 
 #How to use
 Set a Uri with function setUri(string);
@@ -190,6 +186,15 @@ indexes of array correspond with the token id
 zero index of both arrays are filled with filler data
 struct holds the owner.
 How does the receipt value get implemented? id of receipt is 0, multiple users have multiple receipts. Do i need to map this?
+
+EDIT 02/22/2022 after above
+I used the mapping(address => Cutee) addressToTokenIds
+and a struct
+Cutee {
+  uint256[] tokenIds;
+  uint256 receiptAmount;
+}
+to no avail of changing to this or all arrays and structs the gas usage only went up. To view this spreadsheet with little details on gas usage on hardhat (https://docs.google.com/spreadsheets/d/1s34EbMMvwh9FDYPeU7Sh8uJq4qtfzP6GOPcWqWT2374/edit?usp=sharing). Maybe the gas units used on hardhat are different on ropsten? Im unsure at the current moment but i will test it.
 
 TODOS for implementation
 
