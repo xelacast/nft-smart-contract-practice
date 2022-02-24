@@ -196,6 +196,19 @@ Cutee {
 }
 to no avail of changing to this or all arrays and structs the gas usage only went up. To view this spreadsheet with little details on gas usage on hardhat (https://docs.google.com/spreadsheets/d/1s34EbMMvwh9FDYPeU7Sh8uJq4qtfzP6GOPcWqWT2374/edit?usp=sharing). Maybe the gas units used on hardhat are different on ropsten? Im unsure at the current moment but i will test it.
 
+#Contract Reformat and Future Season Variable Reset
+My motivation to reformat my code is to make it legible. To comment the functions that are crucial for future upgrades and variable redeclaration. To change variable and function names to more appropriate matters and make a dependency chart(ill have to draw this out as i go then digitize it).
+- Season Reset
+If every season is going to have the same exact variable decarations except the ids, i can have a function that resets it by calling it
+ex
+function setSeason() {
+  variables vifSpots, giveaways, bundleSupply, receiptSupply,
+  fruitTokenIdLowerParam, fourInOneTokenIdUpperParam, presaleStartTime, saleStartTime
+}
+I dont think this would be the best case. To make it dynamic to see how active we are per season will determin giveaways and vif spots.
+bundle count will always be the same so ids are set based on finite amount of supply determined for season 1.
+- Make a checklist of everything i must do to set the season
+
 TODOS for implementation
 
 #Website Security

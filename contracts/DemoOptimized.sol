@@ -20,79 +20,113 @@ contract DemoOptimized is
     IERC1155MetadataURI
 {
     uint256 constant receiptTokenId = 0;
-    uint256 receiptTotalSupply = 3000;
-    uint256 fruitTokenId = 1; // first season will go to 4000
-    uint256 fourInOneTokenId = 100001; // first season will go to 101000
+    uint256 fruitTokenId = 1;
+    uint256 fourInOneTokenId = 100001;
 
-    uint256 giveaways = 123;
-    uint256 bundleSupply = 877;
+    uint256 giveawayBundleCount;
+    uint256 bundleSupply = 1000;
+    uint256 receiptSupply = 3000;
+
+    /// @notice @dev 100000000 gwei
+    uint256 pricePerBundle = 0.1 ether;
+
+    /// @dev lower params will change with seasons
+    uint256 fruitTokenIdLowerParam;
+    uint256 fourInOneTokenIdLowerParam;
+    uint256 fruitTokenIdUpperParam;
+    uint256 fourInOneTokenIdUpperParam;
+
+    uint256 presaleStartTime;
+    uint256 saleStartTime;
+
+    string private _uri;
+    string private _uriPreview;
+
+    /// @dev this array is used to reset the VIF mapping
+    address[] veryImportantFruit;
+
+    /// @dev balance of bundles minted
+    /// @notice this balance will be tracked so you cannot buy more than the
+    /// quanitity specified and can NOT transfer nfts to another account and buy with
+    /// the same account
+    mapping(address => uint256) private bundleBalance;
+    mapping(address => uint256) addressToVIF;
 
     event IncreaseReceiptSupply(address _sender, uint256 _supply);
     event IncreaseBundleSupply(address _sender, uint256 _supply);
-    // I could have a setSeason Event? and a setSeason function
+    event SaleHasBeenSet(uint256 _presaleStartTime, uint256 _saleStartTime);
+    event PricePerBundle(address _sender, uint256 _gwei);
+    event ChangeFourInOne(
+        address _sender,
+        uint256 _fourInOneToken,
+        uint256 _fruitTokenId,
+        uint256 _quadrant
+    );
 
-    mapping(address => uint256) private bundleBalance; // stop people from trading out and buying if nfts are traded to another account the account traded to can still buy
-    mapping(uint256 => address) private tokenIdToAddress; // used for cuteeExchange. can use balaneceOf Instead
-
-    constructor(string memory uri, string memory uriHidden) ERC1155() {
-        // Season 1 toknenId Parameters for URI
+    constructor(string memory uri1, string memory uriPreview1) ERC1155() {
         fruitTokenIdLowerParam = 0;
         fruitTokenIdUpperParam = 99999;
         fourInOneTokenIdLowerParam = 100000;
         fourInOneTokenIdUpperParam = 999999;
-        /// @dev upon creation of the contract uri and hiddenUri are set and never to changed. uri is a dns that points to an ipfs
-        _uri = uri;
-        _uriHidden = uriHidden;
+        presaleStartTime = 1961257932;
+        _setUri(uri1, uriPreview1);
     }
 
-    // must add noreentry to here and cutee exchange
-    function mintBundle() external payable isSaleActive nonReentrant {
+    function mintBundle(uint256 _quantity)
+        external
+        payable
+        isSaleActive
+        nonReentrant
+    {
+        require(_quantity < 3, "Can mint a max ammount of bundles of 2");
         require(
-            msg.value >= 0.1 ether,
+            msg.value >= 0.1 ether * _quantity,
             "Not enough ether was sent to transaction"
         );
         require(
-            bundleBalance[msg.sender] == 0,
+            bundleBalance[msg.sender] < 3,
             "Cannot purchase more than one batch mint per wallet"
         );
-        require(bundleSupply > 0, "All Batches have been minted");
+        require(bundleSupply - _quantity >= 0, "All Batches have been minted");
 
         uint256[] memory batchMintAmmount = new uint256[](6);
         uint256[] memory idHolder = new uint256[](6);
 
-        // for (uint256 i = 0; i < _quantity; i++) {
-        batchMintAmmount[0] = 1;
-        batchMintAmmount[1] = 1;
-        batchMintAmmount[2] = 1;
-        batchMintAmmount[3] = 1;
-        batchMintAmmount[4] = 1;
-        batchMintAmmount[5] = 3;
+        for (uint256 i = 0; i < _quantity; i++) {
+            batchMintAmmount[0] = 1;
+            batchMintAmmount[1] = 1;
+            batchMintAmmount[2] = 1;
+            batchMintAmmount[3] = 1;
+            batchMintAmmount[4] = 1;
+            batchMintAmmount[5] = 3;
 
-        idHolder[0] = fruitTokenId;
-        fruitTokenId++;
-        idHolder[1] = fruitTokenId;
-        fruitTokenId++;
-        idHolder[2] = fruitTokenId;
-        fruitTokenId++;
-        idHolder[3] = fruitTokenId;
-        fruitTokenId++;
-        idHolder[4] = fourInOneTokenId;
-        fourInOneTokenId++;
-        idHolder[5] = receiptTokenId;
+            idHolder[0] = fruitTokenId;
+            fruitTokenId++;
+            idHolder[1] = fruitTokenId;
+            fruitTokenId++;
+            idHolder[2] = fruitTokenId;
+            fruitTokenId++;
+            idHolder[3] = fruitTokenId;
+            fruitTokenId++;
+            idHolder[4] = fourInOneTokenId;
+            fourInOneTokenId++;
+            idHolder[5] = receiptTokenId;
 
-        bundleBalance[msg.sender]++;
+            bundleBalance[msg.sender]++;
 
-        _mintBatch(msg.sender, idHolder, batchMintAmmount, "");
+            _mintBatch(msg.sender, idHolder, batchMintAmmount, "");
 
-        receiptTotalSupply = receiptTotalSupply - 3;
-        bundleSupply--;
-        // }
+            bundleSupply--;
+        }
     }
 
-    /// @notice This givaway will not impact the presale and sale to minting limit of 1
-    /// @dev the parameter is an array to mint multiple batches at once
-    function giveawayBundle(address[] calldata _to) external onlyOwner {
-        require(giveaways > 0, "Out of Giveaways.");
+    /// @notice This givaway will not impact the minting quantity
+    /// @dev the parameter is an array to mint batches for each address
+    function giveawayBundle(address[] calldata _to) public onlyOwner {
+        require(
+            bundleSupply - _to.length >= 0,
+            "Not enough bundles for giveaways."
+        );
 
         uint256[] memory batchMintAmmount = new uint256[](6);
         batchMintAmmount[0] = 1;
@@ -117,31 +151,80 @@ contract DemoOptimized is
             fourInOneTokenId++;
             idHolder[5] = receiptTokenId;
             _mintBatch(_to[i], idHolder, batchMintAmmount, "");
-            receiptTotalSupply = receiptTotalSupply - 3;
-            giveaways--;
+            bundleSupply--;
         }
+        giveawayBundleCount = giveawayBundleCount + _to.length;
     }
 
-    function increaseReceiptSupply(uint256 _supply) external onlyOwner {
-        receiptTotalSupply = receiptTotalSupply + _supply;
+    /// @dev the cuteeEchange uses an oracle to contact an outside server
+    /// @notice this will be the exchange of fruit for your four in one
+    function cuteeExchange(
+        uint256 _fruitTokenId,
+        uint256 _fourInOneTokenId,
+        uint256 _quadrant
+    ) public nonReentrant {
+        require(_quadrant < 5, "Quadrant out of range");
+        address operator = _msgSender();
+        address[] memory accounts = new address[](3);
+        uint256[] memory balances = new uint256[](3);
+        uint256[] memory balanceCheck = new uint256[](3);
+
+        accounts[0] = operator;
+        accounts[1] = operator;
+        accounts[2] = operator;
+
+        balances[0] = _fruitTokenId;
+        balances[1] = _fourInOneTokenId;
+        balances[2] = receiptTokenId;
+
+        balanceCheck = balanceOfBatch(accounts, balances);
+
+        require(balanceCheck[0] > 0, "You do not own the Fruit Token");
+        require(balanceCheck[1] > 0, "You do not own the FourInOne Token");
+        require(balanceCheck[2] > 0, "You do not own a Receipt");
+
+        // send to oracle
+
+        // return oracle boolean.
+
+        // emit event and burn token
+        emit ChangeFourInOne(
+            operator,
+            _fourInOneTokenId,
+            _fruitTokenId,
+            _quadrant
+        );
+        _burn(operator, 0, 1);
+        receiptSupply--;
+    }
+
+    ///@dev the receipt supply will increase every season 3000 per season
+    function increaseReceiptSupply(uint256 _supply) public onlyOwner {
+        receiptSupply = receiptSupply + _supply;
         emit IncreaseReceiptSupply(msg.sender, _supply);
     }
 
-    /// @dev getBundleBalance is used to check if the sender has already minted a bundle. Stops from nft wallet swapping
+    function getReceiptSupply() public view returns (uint256) {
+        return receiptSupply;
+    }
+
+    /// @dev getBundleBalance is used to check if the sender has already minted a bundle.
+    /// Stops from nft wallet swapping
     function getBundleBalance() public view returns (uint256) {
         return bundleBalance[msg.sender];
+    }
+
+    /// @dev bundleSupply will be set for every season
+    function setBundleSupply(uint256 _bundleSupply) public onlyOwner {
+        bundleSupply = _bundleSupply;
+        emit IncreaseBundleSupply(msg.sender, _bundleSupply);
     }
 
     function getBundleSupply() public view returns (uint256) {
         return bundleSupply;
     }
 
-    function getReceiptSupply() public view returns (uint256) {
-        return receiptTotalSupply;
-    }
-
-    // can be a seperate contract to inherit
-    function getBalance() public view onlyOwner returns (uint256) {
+    function getBalance() public view returns (uint256) {
         return address(this).balance;
     }
 
@@ -150,55 +233,11 @@ contract DemoOptimized is
         payable(msg.sender).transfer(address(this).balance);
     }
 
-    function cuteeExchange(
-        uint256 _fruitTokenId,
-        uint256 _fourInOneTokenId,
-        uint256 _quadrant
-    ) public nonReentrant {
-        // if quadrant is a large number send it to the oracle and it will do modulus on it. This will save gas for exchange
-        address[] memory accounts = new address[](3);
-        uint256[] memory balances = new uint256[](3);
-        uint256[] memory balanceCheck = new uint256[](3);
-
-        accounts[0] = msg.sender;
-        accounts[1] = msg.sender;
-        accounts[2] = msg.sender;
-
-        balances[0] = _fruitTokenId;
-        balances[1] = _fourInOneTokenId;
-        balances[2] = receiptTokenId;
-
-        balanceCheck = balanceOfBatch(accounts, balances);
-
-        require(balanceCheck[0] > 0, "You do not own the fruittoken");
-        require(balanceCheck[1] > 0, "You do not own the fourInOneToken");
-        require(balanceCheck[2] > 0, "You do not own a receipt for exchange");
-
-        // send to oracle
-
-        // return oracle boolean.
-    }
-
-    // TODO create uri Section for reveal and nonreveal
     // ------------------------- //
     /// @dev uri section       ///
     // ------------------------- //
-    // must change the erc1155 contract data and integrate it into this contract to have a prereveal and no constructor.
 
-    // how am i going to set prereveal data uris for all tokens that have already been minted? seperate uri for second season. This means i will have to make the meta data for the second season dynamic.
-
-    string private _uri;
-    string private _uriHidden;
-
-    /// @dev lower params will change with seasons
-    uint256 fruitTokenIdLowerParam;
-    uint256 fourInOneTokenIdLowerParam;
-
-    /// @dev upper params must not change
-    uint256 fruitTokenIdUpperParam;
-    uint256 fourInOneTokenIdUpperParam;
-
-    /// @dev to reveal the current season Pictures must change the params
+    /// @dev to reveal the current season Pictures must change the lower params
     function setSeasonLowerParams(
         uint256 _fruitTokenIdLowerParam,
         uint256 _fourInOneTokenIdLowerParam
@@ -207,8 +246,6 @@ contract DemoOptimized is
         fourInOneTokenIdLowerParam = _fourInOneTokenIdLowerParam;
     }
 
-    // must set this to correspond with marketplace and eip1155
-    // i can change this and check for tokenIds and change the season token ids to change the uri
     function uri(uint256 _tokenId)
         public
         view
@@ -216,16 +253,13 @@ contract DemoOptimized is
         override
         returns (string memory)
     {
-        // TODO
-        // if tokenId > n && tokenId < m || tokenId > x && tokenId < y;
-        // this will be a hook call
         if (
             (_tokenId > fruitTokenIdLowerParam &&
                 _tokenId < fruitTokenIdUpperParam) ||
             (_tokenId > fourInOneTokenIdLowerParam &&
                 _tokenId < fourInOneTokenIdUpperParam)
         ) {
-            return _uriHidden;
+            return _uriPreview;
         } else {
             return
                 string(
@@ -234,16 +268,30 @@ contract DemoOptimized is
         }
     }
 
-    /// TODO how do i set URI's for future release to be hidden. Or do I do that? Yes becuase of presales.
-    function _setUri(string memory uri) internal onlyOwner {
-        _uri = uri;
+    /// @dev change uri incase we have any technical error. LikelyHood: VeryUnlikely
+    function setUri(string memory uriSetter, string memory uriPreviewSetter)
+        public
+        onlyOwner
+    {
+        _uri = uriSetter;
+        _uriPreview = uriPreviewSetter;
+    }
+
+    function _setUri(string memory uriSetter, string memory uriPreviewSetter)
+        internal
+        virtual
+    {
+        _uri = uriSetter;
+        _uriPreview = uriPreviewSetter;
     }
 
     // ------------------------- //
     /// @dev sale section       ///
     // ------------------------- //
 
-    /// @dev uses block time stamp to start presale and sale based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales) saleTime will be set with _presaleStartTime+_timeBetweenSales
+    /// @dev uses block time stamp to start presale and sale
+    /// based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales)
+    /// saleTime will be set with _presaleStartTime+_timeBetweenSales
     modifier isSaleActive() {
         require(block.timestamp > presaleStartTime, "Presale has not started");
         if (
@@ -258,71 +306,73 @@ contract DemoOptimized is
         _;
     }
 
-    uint256 presaleStartTime;
-    uint256 saleStartTime;
-
-    /// @dev emits after setPresaleStartTime has been called with time parameters
-    event SaleHasBeenSet(uint256 _presaleStartTime, uint256 _saleStartTime);
-
     /// @dev sale start time will set x ammount of time after presale start time.
     /// Leads to less dynamics. Can set time and use modifier to start the sale.
     /// Sale ends when all bundles are sold.
     /// @param _presaleStartTime argument must be set in seconds
     /// @param _timeBetweenSales argument must be set in seconds
     /// @dev can define the entirety of our season sale in this one function call?
-    // uint256 _bundleSupply,
-    // uint256 _giveaways,
-    // uint256 _vifSpots
+    // function setSaleTimeAndBundleSupply
     function setPresaleStartTime(
         uint256 _presaleStartTime,
         uint256 _timeBetweenSales
     ) public onlyOwner {
-        // bundleSupply = _bundleSupply;
-        // giveaways = _giveaways;
-        // vifSpots = _vifSpots;
         presaleStartTime = _presaleStartTime;
         saleStartTime = _presaleStartTime + _timeBetweenSales;
         emit SaleHasBeenSet(presaleStartTime, saleStartTime);
     }
 
-    // price is set in wei this is 0.1 ether
-    uint256 pricePerBundle = 0.1 ether;
-
     function setPricePerBundle(uint256 _gwei) public onlyOwner {
         pricePerBundle = _gwei;
+        emit PricePerBundle(msg.sender, _gwei);
+    }
+
+    function getPricePerBundle() public view returns (uint256) {
+        return pricePerBundle;
     }
 
     // ------------------------- //
     /// @dev VIF section       ///
     // ------------------------- //
-    mapping(address => uint256) addressToVIF;
-    address[] veryImportantFruit;
-    uint256 VIFCount = 500;
 
-    // this is an expensive task to run
-    function setVIF(address[] memory _vifs) public onlyOwner {
-        require(VIFCount >= _vifs.length, "Not Enough VIF spots left");
+    function setVIFMember(address[] memory _vifs) public onlyOwner {
         for (uint256 i = 0; i < _vifs.length; i++) {
-            addressToVIF[_vifs[i]] = 1;
-            veryImportantFruit.push(_vifs[i]);
-            // console.log(addressToVIF[_VIFs[i]]);
+            if (addressToVIF[_vifs[i]] == 1) {
+                continue;
+            } else {
+                addressToVIF[_vifs[i]] = 1;
+                veryImportantFruit.push(_vifs[i]);
+            }
         }
-        VIFCount = VIFCount - _vifs.length;
     }
 
-    function resetVIF(uint256 _VIFCount) public onlyOwner {
+    /// @dev all vif members will be reset at the end of every sale
+    /// We will start fresh before every mint
+    function resetVIF() public onlyOwner {
         for (uint256 i = 0; i < veryImportantFruit.length; i++) {
             addressToVIF[veryImportantFruit[i]] = 0;
         }
         delete veryImportantFruit;
-        VIFCount = _VIFCount;
     }
 
-    function getVIF(address _address) public view onlyOwner returns (uint256) {
-        return addressToVIF[_address];
+    /// @dev can be used to get a vifMember
+    /// @notice if the address you entered returns with 1 it has been VIFed
+    function getVIFMember(address _address)
+        public
+        view
+        returns (address, string memory)
+    {
+        return (
+            _address,
+            string(abi.encodePacked(Strings.toString(addressToVIF[_address])))
+        );
     }
 
-    function getVIFLeft() public view onlyOwner returns (uint256) {
-        return VIFCount;
+    /// @dev used to see how many vifs we have given out
+    function getVIFCount() public view onlyOwner returns (string memory) {
+        return
+            string(
+                abi.encodePacked(Strings.toString(veryImportantFruit.length))
+            );
     }
 }
