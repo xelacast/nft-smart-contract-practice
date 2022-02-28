@@ -17,7 +17,7 @@ async function main() {
   console.log("Contract deployed with id: ", contract.address);
 
   const options = {
-    value: ethers.utils.parseEther("0.2"),
+    value: ethers.utils.parseEther("0.1"),
     // gasPrice: gasPrice,
     // gasLimit: ethers.utils.hexlify(10000), // 100gwei
     // nonce: connection.getTransactionCount(addr1.address, 'latest'),
@@ -27,7 +27,14 @@ async function main() {
   await contract.connect(owner).setPresaleStartTime(0,1);
 
   // how you send arguments and ether into a connected contract
-  await contract.connect(addr1).mintBundle(2, options);
+  await contract.connect(addr1).mintBundle(1, options);
+  // await contract.connect(addr1).mintBundle(1, options);
+  // try {
+  //   await contract.connect(addr1).mintBundle(1, options);
+
+  // } catch(error) {
+  //   console.log("Cant mint more than 2")
+  // }
   // await addr1.sendTransaction(tx);
 }
 

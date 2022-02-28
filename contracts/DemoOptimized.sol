@@ -46,9 +46,7 @@ contract DemoOptimized is
     address[] veryImportantFruit;
 
     /// @dev balance of bundles minted
-    /// @notice this balance will be tracked so you cannot buy more than the
-    /// quanitity specified and can NOT transfer nfts to another account and buy with
-    /// the same account
+    /// @notice this balance will be tracked and reset for every season
     mapping(address => uint256) private bundleBalance;
     mapping(address => uint256) addressToVIF;
 
@@ -66,10 +64,27 @@ contract DemoOptimized is
     constructor(string memory uri1, string memory uriPreview1) ERC1155() {
         fruitTokenIdLowerParam = 0;
         fruitTokenIdUpperParam = 99999;
-        fourInOneTokenIdLowerParam = 100000;
+        fourInOneTokenIdLowerParam = 100001;
         fourInOneTokenIdUpperParam = 999999;
         presaleStartTime = 1961257932;
         _setUri(uri1, uriPreview1);
+    }
+
+    /// @dev uses block time stamp to start presale and sale
+    /// based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales)
+    /// saleTime will be set with _presaleStartTime+_timeBetweenSales
+    modifier isSaleActive() {
+        require(block.timestamp > presaleStartTime, "Presale has not started");
+        if (
+            block.timestamp > presaleStartTime &&
+            block.timestamp < saleStartTime
+        ) {
+            require(
+                addressToVIF[msg.sender] > 0,
+                "Presale is active but you're are not a VIF, wait for public sale"
+            );
+        }
+        _;
     }
 
     function mintBundle(uint256 _quantity)
@@ -78,16 +93,15 @@ contract DemoOptimized is
         isSaleActive
         nonReentrant
     {
-        require(_quantity < 3, "Can mint a max ammount of bundles of 2");
         require(
             msg.value >= 0.1 ether * _quantity,
             "Not enough ether was sent to transaction"
         );
         require(
-            bundleBalance[msg.sender] < 3,
-            "Cannot purchase more than one batch mint per wallet"
+            bundleBalance[msg.sender] + _quantity <= 2,
+            "Cannot purchase more than two bundle per sender"
         );
-        require(bundleSupply - _quantity >= 0, "All Batches have been minted");
+        require(bundleSupply - _quantity >= 0, "All Bundles have been minted");
 
         uint256[] memory batchMintAmmount = new uint256[](6);
         uint256[] memory idHolder = new uint256[](6);
@@ -111,9 +125,7 @@ contract DemoOptimized is
             idHolder[4] = fourInOneTokenId;
             fourInOneTokenId++;
             idHolder[5] = receiptTokenId;
-
             bundleBalance[msg.sender]++;
-
             _mintBatch(msg.sender, idHolder, batchMintAmmount, "");
 
             bundleSupply--;
@@ -122,7 +134,7 @@ contract DemoOptimized is
 
     /// @notice This givaway will not impact the minting quantity
     /// @dev the parameter is an array to mint batches for each address
-    function giveawayBundle(address[] calldata _to) public onlyOwner {
+    function giveawayBundle(address[] calldata _to) external onlyOwner {
         require(
             bundleSupply - _to.length >= 0,
             "Not enough bundles for giveaways."
@@ -199,25 +211,28 @@ contract DemoOptimized is
     }
 
     ///@dev the receipt supply will increase every season 3000 per season
-    function increaseReceiptSupply(uint256 _supply) public onlyOwner {
-        receiptSupply = receiptSupply + _supply;
-        emit IncreaseReceiptSupply(msg.sender, _supply);
+    // function increaseReceiptSupply(uint256 _supply) public onlyOwner {
+    //     receiptSupply = receiptSupply + _supply;
+    //     emit IncreaseReceiptSupply(msg.sender, _supply);
+    // }
+
+    /// @dev bundleSupply will be set for every season
+    // function setBundleSupply(uint256 _bundleSupply) public onlyOwner {
+    //     bundleSupply = _bundleSupply;
+    //     emit IncreaseBundleSupply(msg.sender, _bundleSupply);
+    // }
+    /// @dev sets necessary params to conclude our post season
+    function setSeason() external onlyOwner {
+        bundleSupply = bundleSupply + 1000;
+        receiptSupply = receiptSupply + 3000;
+        // @dev this is set 40 years from Feb 24th, 2022
+        presaleStartTime = 7845031728;
+        emit IncreaseBundleSupply(msg.sender, 1000);
+        emit IncreaseReceiptSupply(msg.sender, 3000);
     }
 
     function getReceiptSupply() public view returns (uint256) {
         return receiptSupply;
-    }
-
-    /// @dev getBundleBalance is used to check if the sender has already minted a bundle.
-    /// Stops from nft wallet swapping
-    function getBundleBalance() public view returns (uint256) {
-        return bundleBalance[msg.sender];
-    }
-
-    /// @dev bundleSupply will be set for every season
-    function setBundleSupply(uint256 _bundleSupply) public onlyOwner {
-        bundleSupply = _bundleSupply;
-        emit IncreaseBundleSupply(msg.sender, _bundleSupply);
     }
 
     function getBundleSupply() public view returns (uint256) {
@@ -269,13 +284,13 @@ contract DemoOptimized is
     }
 
     /// @dev change uri incase we have any technical error. LikelyHood: VeryUnlikely
-    function setUri(string memory uriSetter, string memory uriPreviewSetter)
-        public
-        onlyOwner
-    {
-        _uri = uriSetter;
-        _uriPreview = uriPreviewSetter;
-    }
+    // function setUri(string memory uriSetter, string memory uriPreviewSetter)
+    //     public
+    //     onlyOwner
+    // {
+    //     _uri = uriSetter;
+    //     _uriPreview = uriPreviewSetter;
+    // }
 
     function _setUri(string memory uriSetter, string memory uriPreviewSetter)
         internal
@@ -288,23 +303,6 @@ contract DemoOptimized is
     // ------------------------- //
     /// @dev sale section       ///
     // ------------------------- //
-
-    /// @dev uses block time stamp to start presale and sale
-    /// based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales)
-    /// saleTime will be set with _presaleStartTime+_timeBetweenSales
-    modifier isSaleActive() {
-        require(block.timestamp > presaleStartTime, "Presale has not started");
-        if (
-            block.timestamp > presaleStartTime &&
-            block.timestamp < saleStartTime
-        ) {
-            require(
-                addressToVIF[msg.sender] > 0,
-                "Presale is active but you're are not a VIF, wait for public sale"
-            );
-        }
-        _;
-    }
 
     /// @dev sale start time will set x ammount of time after presale start time.
     /// Leads to less dynamics. Can set time and use modifier to start the sale.
