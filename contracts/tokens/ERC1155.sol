@@ -35,7 +35,7 @@ contract ERC1155 is Context, ERC165, IERC1155 {
     /**
      * @dev See {_setURI}.
      */
-    constructor() {}
+    // constructor() {}
 
     /**
      * @dev See {IERC165-supportsInterface}.
@@ -261,28 +261,28 @@ contract ERC1155 is Context, ERC165, IERC1155 {
         );
     }
 
-    function _mint(
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) internal virtual {
-        require(to != address(0), "ERC1155: mint to the zero address");
+    // function _mint(
+    //     address to,
+    //     uint256 id,
+    //     uint256 amount,
+    //     bytes memory data
+    // ) internal virtual {
+    //     require(to != address(0), "ERC1155: mint to the zero address");
 
-        address operator = _msgSender();
+    //     address operator = _msgSender();
 
-        _balances[id][to] += amount;
-        emit TransferSingle(operator, address(0), to, id, amount);
+    //     _balances[id][to] += amount;
+    //     emit TransferSingle(operator, address(0), to, id, amount);
 
-        _doSafeTransferAcceptanceCheck(
-            operator,
-            address(0),
-            to,
-            id,
-            amount,
-            data
-        );
-    }
+    //     _doSafeTransferAcceptanceCheck(
+    //         operator,
+    //         address(0),
+    //         to,
+    //         id,
+    //         amount,
+    //         data
+    //     );
+    // }
 
     function _mintBatch(
         address to,

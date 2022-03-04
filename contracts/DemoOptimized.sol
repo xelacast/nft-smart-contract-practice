@@ -52,7 +52,7 @@ contract DemoOptimized is
 
     event IncreaseReceiptSupply(address _sender, uint256 _supply);
     event IncreaseBundleSupply(address _sender, uint256 _supply);
-    event SaleHasBeenSet(uint256 _presaleStartTime, uint256 _saleStartTime);
+    // event SaleHasBeenSet(uint256 _presaleStartTime, uint256 _saleStartTime);
     event PricePerBundle(address _sender, uint256 _gwei);
     event ChangeFourInOne(
         address _sender,
@@ -317,7 +317,7 @@ contract DemoOptimized is
     ) public onlyOwner {
         presaleStartTime = _presaleStartTime;
         saleStartTime = _presaleStartTime + _timeBetweenSales;
-        emit SaleHasBeenSet(presaleStartTime, saleStartTime);
+        // emit SaleHasBeenSet(presaleStartTime, saleStartTime);
     }
 
     function setPricePerBundle(uint256 _gwei) public onlyOwner {
@@ -329,9 +329,9 @@ contract DemoOptimized is
         return pricePerBundle;
     }
 
-    // ------------------------- //
-    /// @dev VIF section       ///
-    // ------------------------- //
+    //     // ------------------------- //
+    //     /// @dev VIF section       ///
+    //     // ------------------------- //
 
     function setVIFMember(address[] memory _vifs) public onlyOwner {
         for (uint256 i = 0; i < _vifs.length; i++) {

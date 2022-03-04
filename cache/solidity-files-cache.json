@@ -2,7 +2,7 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/DemoDapp.sol": {
-      "lastModificationDate": 1645466112560,
+      "lastModificationDate": 1645576221850,
       "contentHash": "05640ad86c5700eb41493dab6c2c0c87",
       "sourceName": "contracts/DemoDapp.sol",
       "solcConfig": {
@@ -446,8 +446,8 @@
       ]
     },
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/VIF.sol": {
-      "lastModificationDate": 1645466090300,
-      "contentHash": "0be5db5365e21f3b04c48530f4524463",
+      "lastModificationDate": 1646357352640,
+      "contentHash": "1d02a53eb807f70736ad7d12bf34697e",
       "sourceName": "contracts/VIF.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -512,8 +512,8 @@
       ]
     },
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/DemoOptimized.sol": {
-      "lastModificationDate": 1645750661940,
-      "contentHash": "f1c64d4c0ffed0603454c6544da8d9f7",
+      "lastModificationDate": 1646357387510,
+      "contentHash": "ab3d33d06bb9eb6f704f873f40c286e4",
       "sourceName": "contracts/DemoOptimized.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -592,8 +592,8 @@
       ]
     },
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/tokens/ERC1155.sol": {
-      "lastModificationDate": 1645725950520,
-      "contentHash": "8926c01a124c68d4434ba5738e7dff0b",
+      "lastModificationDate": 1646079917200,
+      "contentHash": "e35a40e88364e9298d95bcdaf5247bb0",
       "sourceName": "contracts/tokens/ERC1155.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -850,6 +850,37 @@
       "artifacts": [
         "ERC165"
       ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/DemoNoDeclar.sol": {
+      "lastModificationDate": 1646357092480,
+      "contentHash": "a3cc991c5026ebf07ee086ee71b8181f",
+      "sourceName": "contracts/DemoNoDeclar.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [],
+      "artifacts": []
     }
   }
 }

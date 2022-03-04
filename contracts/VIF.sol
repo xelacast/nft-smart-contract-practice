@@ -7,32 +7,49 @@
 // contract VIF is Ownable {
 //     mapping(address => uint256) addressToVIF;
 //     address[] veryImportantFruit;
-//     uint256 VIFCount = 500;
 
-//     // this is an expensive task to run
-//     function setVIF(address[] memory _vifs) public onlyOwner {
-//         require(VIFCount >= _vifs.length, "Not Enough VIF spots left");
+//     // ------------------------- //
+//     /// @dev VIF section       ///
+//     // ------------------------- //
+
+//     function setVIFMember(address[] memory _vifs) public onlyOwner {
 //         for (uint256 i = 0; i < _vifs.length; i++) {
-//             addressToVIF[_vifs[i]] = 1;
-//             veryImportantFruit.push(_vifs[i]);
-//             // console.log(addressToVIF[_VIFs[i]]);
+//             if (addressToVIF[_vifs[i]] == 1) {
+//                 continue;
+//             } else {
+//                 addressToVIF[_vifs[i]] = 1;
+//                 veryImportantFruit.push(_vifs[i]);
+//             }
 //         }
-//         VIFCount = VIFCount - _vifs.length;
 //     }
 
-//     function resetVIF(uint256 _VIFCount) public onlyOwner {
+//     /// @dev all vif members will be reset at the end of every sale
+//     /// We will start fresh before every mint
+//     function resetVIF() public onlyOwner {
 //         for (uint256 i = 0; i < veryImportantFruit.length; i++) {
 //             addressToVIF[veryImportantFruit[i]] = 0;
 //         }
 //         delete veryImportantFruit;
-//         VIFCount = _VIFCount;
 //     }
 
-//     function getVIF(address _address) public view onlyOwner returns (uint256) {
-//         return addressToVIF[_address];
+//     /// @dev can be used to get a vifMember
+//     /// @notice if the address you entered returns with 1 it has been VIFed
+//     function getVIFMember(address _address)
+//         public
+//         view
+//         returns (address, string memory)
+//     {
+//         return (
+//             _address,
+//             string(abi.encodePacked(Strings.toString(addressToVIF[_address])))
+//         );
 //     }
 
-//     function getVIFLeft() public view onlyOwner returns (uint256) {
-//         return VIFCount;
+//     /// @dev used to see how many vifs we have given out
+//     function getVIFCount() public view onlyOwner returns (string memory) {
+//         return
+//             string(
+//                 abi.encodePacked(Strings.toString(veryImportantFruit.length))
+//             );
 //     }
 // }

@@ -5,6 +5,7 @@
 
  require('dotenv').config();
  require('@nomiclabs/hardhat-waffle');
+ require('hardhat-contract-sizer');
 //  require('hardhat-gas-reporter')
 
  const { API_URL, PRIVATE_KEY } = process.env;
@@ -44,6 +45,13 @@
           "abi"
         ]
       }
+    },
+    contractSizer: {
+      alphaSort: true,
+      disambiguatePaths: false,
+      runOnCompile: true,
+      strict: true,
+      only: ['DemoOptimzed'],
     }
   },
   mocha: {
