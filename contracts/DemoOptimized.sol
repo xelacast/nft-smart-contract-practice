@@ -11,7 +11,7 @@ import "./tokens/IERC1155MetadataURI.sol";
 import "./tokens/ERC1155.sol";
 import "./utils/Ownable.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract DemoOptimized is
     ERC1155,
@@ -23,7 +23,8 @@ contract DemoOptimized is
     uint256 fruitTokenId = 1;
     uint256 fourInOneTokenId = 100001;
 
-    uint256 giveawayBundleCount;
+    /// @dev will always be reset to 1000; when all bundles are sold
+    /// NOTE edge case what if all bundles for a season dont sell and you want to mint the new season? how would the ids work? or we must not release a new season unless the last season is sold out.
     uint256 bundleSupply = 1000;
     uint256 receiptSupply = 3000;
 
@@ -31,116 +32,161 @@ contract DemoOptimized is
     uint256 pricePerBundle = 0.1 ether;
 
     /// @dev lower params will change with seasons
-    uint256 fruitTokenIdLowerParam;
-    uint256 fourInOneTokenIdLowerParam;
-    uint256 fruitTokenIdUpperParam;
-    uint256 fourInOneTokenIdUpperParam;
+    // uint256 fruitTokenIdLowerParam = 0;
+    // uint256 fourInOneTokenIdLowerParam = 99999;
+    // uint256 fruitTokenIdUpperParam = 100001;
+    // uint256 fourInOneTokenIdUpperParam = 999999;
 
+    /// @dev presaleStartTime will be set with each season launch
+    uint256 vifSaleStartTime;
     uint256 presaleStartTime;
-    uint256 saleStartTime;
+    uint256 publicSaleStartTime;
 
     string private _uri;
     string private _uriPreview;
 
-    /// @dev this array is used to reset the VIF mapping
-    address[] veryImportantFruit;
+    /// @dev array to reset the VIF mapping
+    // address[] presaleMembers;
+    // address[] veryImportantFruit;
+
+    /// @dev array to show sale options
+    // struct CuteeSale {
+    //     uint32 vif;
+    //     uint32 presale;
+    // }
 
     /// @dev balance of bundles minted
     /// @notice this balance will be tracked and reset for every season
+    /// TODO redo this with a struct and one mapping. This might save gas
     mapping(address => uint256) private bundleBalance;
-    mapping(address => uint256) addressToVIF;
+    mapping(address => uint256) private addressToVifMember;
+    mapping(address => uint256) private addressToPresaleMember;
+    mapping(address => uint256) private addressToMintPass;
+
+    uint256 vifCount;
+    address[] presaleMemberList;
 
     event IncreaseReceiptSupply(address _sender, uint256 _supply);
-    event IncreaseBundleSupply(address _sender, uint256 _supply);
-    // event SaleHasBeenSet(uint256 _presaleStartTime, uint256 _saleStartTime);
-    event PricePerBundle(address _sender, uint256 _gwei);
-    event ChangeFourInOne(
-        address _sender,
-        uint256 _fourInOneToken,
-        uint256 _fruitTokenId,
-        uint256 _quadrant
-    );
 
     constructor(string memory uri1, string memory uriPreview1) ERC1155() {
-        fruitTokenIdLowerParam = 0;
-        fruitTokenIdUpperParam = 99999;
-        fourInOneTokenIdLowerParam = 100001;
-        fourInOneTokenIdUpperParam = 999999;
-        presaleStartTime = 1961257932;
         _setUri(uri1, uriPreview1);
+        vifCount = 0;
     }
 
-    /// @dev uses block time stamp to start presale and sale
-    /// based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales)
-    /// saleTime will be set with _presaleStartTime+_timeBetweenSales
+    /*
+    @dev uses block time stamp to start presale and sale
+    based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales)
+    saleTime will be set with _presaleStartTime+_timeBetweenSales
+    */
+    // modifier isSaleActive() {
+    //     // VIF sale
+    //     require(block.timestamp > vifSaleStartTime, "VIF sale has not started");
+    //     if (block.timestamp < presaleStartTime) {
+    //         require(
+    //             addressToVifMember[msg.sender] > 0,
+    //             "VIF sale is active but you're are not a VIF, wait for presale"
+    //         );
+    //     }
+    //     // Presale
+    //     else if (
+    //         block.timestamp > presaleStartTime &&
+    //         block.timestamp < publicSaleStartTime
+    //     ) {
+    //         require(
+    //             addressToPresaleMember[msg.sender] > 0 ||
+    //                 addressToVifMember[msg.sender] > 0,
+    //             "Presale is active but you have not been given a spot in presale"
+    //         );
+    //     }
+
+    //     _;
+    // }
+    // TODO make a new modifier to check counts of bunldes.
     modifier isSaleActive() {
-        require(block.timestamp > presaleStartTime, "Presale has not started");
-        if (
-            block.timestamp > presaleStartTime &&
-            block.timestamp < saleStartTime
-        ) {
+        // VIF sale
+        require(block.timestamp > vifSaleStartTime, "VIF sale has not started");
+
+        if (block.timestamp < presaleStartTime) {
             require(
-                addressToVIF[msg.sender] > 0,
-                "Presale is active but you're are not a VIF, wait for public sale"
+                addressToVifMember[msg.sender] > 0,
+                "VIF sale is active but you're are not a VIF, wait for presale"
+            );
+            require(
+                bundleBalance[msg.sender] <= 1,
+                "You can only mint one fruit basket during VIF sale"
             );
         }
+        // Presale
+        else if (
+            block.timestamp > presaleStartTime &&
+            block.timestamp < publicSaleStartTime
+        ) {
+            require(
+                (addressToVifMember[msg.sender] > 0 &&
+                    bundleBalance[msg.sender] < 2) ||
+                    (addressToPresaleMember[msg.sender] > 0 &&
+                        bundleBalance[msg.sender] < 1),
+                "Can only mint one fruit basket during presale."
+            );
+        } else {
+            require(
+                (addressToVifMember[msg.sender] > 0 &&
+                    bundleBalance[msg.sender] < 3) ||
+                    (addressToPresaleMember[msg.sender] > 0 &&
+                        bundleBalance[msg.sender] < 2) ||
+                    bundleBalance[msg.sender] < 1,
+                "Can only mint one fruit basket during public sale."
+            );
+        }
+
         _;
     }
 
-    function mintBundle(uint256 _quantity)
-        external
-        payable
-        isSaleActive
-        nonReentrant
-    {
+    /**
+        @dev primary mint for all mints
+     */
+    function mintBundle() public payable nonReentrant isSaleActive {
         require(
-            msg.value >= 0.1 ether * _quantity,
-            "Not enough ether was sent to transaction"
+            msg.value >= 0.1 ether,
+            "Not enough ether was sent to purchase your fruit basket."
         );
+        require(bundleSupply > 0, "All Bundles have been minted.");
+
+        address recipient = _msgSender();
+
+        _mintBundle(recipient);
+    }
+
+    /*
+        @dev mintpassGiveaway will allow the user to mint before anysales
+        @notice the mintPass can be used for any of our mints if and only if
+        There are any bundles left
+    */
+    function mintPassGiveaway() public {
+        require(bundleSupply > 0, "All bundles have been minted.");
         require(
-            bundleBalance[msg.sender] + _quantity <= 2,
-            "Cannot purchase more than two bundle per sender"
+            addressToMintPass[msg.sender] > 0,
+            "You do not have a free mint"
         );
-        require(bundleSupply - _quantity >= 0, "All Bundles have been minted");
 
-        uint256[] memory batchMintAmmount = new uint256[](6);
-        uint256[] memory idHolder = new uint256[](6);
+        address recipient = _msgSender();
 
-        for (uint256 i = 0; i < _quantity; i++) {
-            batchMintAmmount[0] = 1;
-            batchMintAmmount[1] = 1;
-            batchMintAmmount[2] = 1;
-            batchMintAmmount[3] = 1;
-            batchMintAmmount[4] = 1;
-            batchMintAmmount[5] = 3;
+        addressToMintPass[recipient]--;
 
-            idHolder[0] = fruitTokenId;
-            fruitTokenId++;
-            idHolder[1] = fruitTokenId;
-            fruitTokenId++;
-            idHolder[2] = fruitTokenId;
-            fruitTokenId++;
-            idHolder[3] = fruitTokenId;
-            fruitTokenId++;
-            idHolder[4] = fourInOneTokenId;
-            fourInOneTokenId++;
-            idHolder[5] = receiptTokenId;
-            bundleBalance[msg.sender]++;
-            _mintBatch(msg.sender, idHolder, batchMintAmmount, "");
+        _mintBundle(recipient);
+    }
 
-            bundleSupply--;
+    function mintPass(address[] calldata _giveaways) public onlyOwner {
+        for (uint256 i = 0; i < _giveaways.length; i++) {
+            addressToMintPass[_giveaways[i]]++;
         }
     }
 
-    /// @notice This givaway will not impact the minting quantity
-    /// @dev the parameter is an array to mint batches for each address
-    function giveawayBundle(address[] calldata _to) external onlyOwner {
-        require(
-            bundleSupply - _to.length >= 0,
-            "Not enough bundles for giveaways."
-        );
-
+    /// @dev _mintBundle is used for giveaways and sale mints
+    function _mintBundle(address _to) private {
         uint256[] memory batchMintAmmount = new uint256[](6);
+        uint256[] memory idHolder = new uint256[](6);
+
         batchMintAmmount[0] = 1;
         batchMintAmmount[1] = 1;
         batchMintAmmount[2] = 1;
@@ -148,94 +194,72 @@ contract DemoOptimized is
         batchMintAmmount[4] = 1;
         batchMintAmmount[5] = 3;
 
-        uint256[] memory idHolder = new uint256[](6);
+        idHolder[0] = fruitTokenId;
+        fruitTokenId++;
+        idHolder[1] = fruitTokenId;
+        fruitTokenId++;
+        idHolder[2] = fruitTokenId;
+        fruitTokenId++;
+        idHolder[3] = fruitTokenId;
+        fruitTokenId++;
+        idHolder[4] = fourInOneTokenId;
+        fourInOneTokenId++;
 
-        for (uint256 i = 0; i < _to.length; i++) {
-            idHolder[0] = fruitTokenId;
-            fruitTokenId++;
-            idHolder[1] = fruitTokenId;
-            fruitTokenId++;
-            idHolder[2] = fruitTokenId;
-            fruitTokenId++;
-            idHolder[3] = fruitTokenId;
-            fruitTokenId++;
-            idHolder[4] = fourInOneTokenId;
-            fourInOneTokenId++;
-            idHolder[5] = receiptTokenId;
-            _mintBatch(_to[i], idHolder, batchMintAmmount, "");
-            bundleSupply--;
-        }
-        giveawayBundleCount = giveawayBundleCount + _to.length;
+        bundleBalance[msg.sender]++;
+
+        _mintBatch(msg.sender, idHolder, batchMintAmmount, "");
+
+        bundleSupply--;
     }
 
-    /// @dev the cuteeEchange uses an oracle to contact an outside server
-    /// @notice this will be the exchange of fruit for your four in one
-    function cuteeExchange(
-        uint256 _fruitTokenId,
-        uint256 _fourInOneTokenId,
-        uint256 _quadrant
-    ) public nonReentrant {
-        require(_quadrant < 5, "Quadrant out of range");
-        address operator = _msgSender();
-        address[] memory accounts = new address[](3);
-        uint256[] memory balances = new uint256[](3);
-        uint256[] memory balanceCheck = new uint256[](3);
+    /*
+    @dev sets necessary params to conclude our post season
+    These things must be done
+    Set Bundle Supply to 1000 only if and only if bundle supply is at 0
+    increase the receipt supply by 3000
+    reset the presale members for past season
+    emit event to document increase in reeipts(burn currency)
+    */
 
-        accounts[0] = operator;
-        accounts[1] = operator;
-        accounts[2] = operator;
-
-        balances[0] = _fruitTokenId;
-        balances[1] = _fourInOneTokenId;
-        balances[2] = receiptTokenId;
-
-        balanceCheck = balanceOfBatch(accounts, balances);
-
-        require(balanceCheck[0] > 0, "You do not own the Fruit Token");
-        require(balanceCheck[1] > 0, "You do not own the FourInOne Token");
-        require(balanceCheck[2] > 0, "You do not own a Receipt");
-
-        // send to oracle
-
-        // return oracle boolean.
-
-        // emit event and burn token
-        emit ChangeFourInOne(
-            operator,
-            _fourInOneTokenId,
-            _fruitTokenId,
-            _quadrant
+    function setSeason() public onlyOwner {
+        require(
+            bundleSupply <= 0,
+            "All bundles have not been given away or sold"
         );
-        _burn(operator, 0, 1);
-        receiptSupply--;
-    }
 
-    ///@dev the receipt supply will increase every season 3000 per season
-    // function increaseReceiptSupply(uint256 _supply) public onlyOwner {
-    //     receiptSupply = receiptSupply + _supply;
-    //     emit IncreaseReceiptSupply(msg.sender, _supply);
-    // }
-
-    /// @dev bundleSupply will be set for every season
-    // function setBundleSupply(uint256 _bundleSupply) public onlyOwner {
-    //     bundleSupply = _bundleSupply;
-    //     emit IncreaseBundleSupply(msg.sender, _bundleSupply);
-    // }
-    /// @dev sets necessary params to conclude our post season
-    function setSeason() external onlyOwner {
-        bundleSupply = bundleSupply + 1000;
+        bundleSupply = 1000;
         receiptSupply = receiptSupply + 3000;
-        // @dev this is set 40 years from Feb 24th, 2022
-        presaleStartTime = 7845031728;
-        emit IncreaseBundleSupply(msg.sender, 1000);
+
+        resetPresaleMembers();
+
         emit IncreaseReceiptSupply(msg.sender, 3000);
     }
 
-    function getReceiptSupply() public view returns (uint256) {
+    /// @dev time is in seconds from the January 1st, 1970 Epoch
+    function setSaleTime(
+        uint256 _vifSaleStartTime,
+        uint256 _presaleStartTime,
+        uint256 _publicSaleStartTime
+    ) public onlyOwner {
+        require(
+            _presaleStartTime > _vifSaleStartTime,
+            "Presale Must be later than Vif Sale"
+        );
+        require(
+            _publicSaleStartTime > _presaleStartTime,
+            "Public sale must be later than the presale"
+        );
+
+        vifSaleStartTime = _vifSaleStartTime;
+        presaleStartTime = _presaleStartTime;
+        publicSaleStartTime = _publicSaleStartTime;
+    }
+
+    function receiptTotalSupply() public view returns (uint256) {
         return receiptSupply;
     }
 
-    function getBundleSupply() public view returns (uint256) {
+    function bundleTotalSupply() public view returns (uint256) {
         return bundleSupply;
     }
 
@@ -252,15 +276,10 @@ contract DemoOptimized is
     /// @dev uri section       ///
     // ------------------------- //
 
-    /// @dev to reveal the current season Pictures must change the lower params
-    function setSeasonLowerParams(
-        uint256 _fruitTokenIdLowerParam,
-        uint256 _fourInOneTokenIdLowerParam
-    ) public onlyOwner {
-        fruitTokenIdLowerParam = _fruitTokenIdLowerParam;
-        fourInOneTokenIdLowerParam = _fourInOneTokenIdLowerParam;
-    }
-
+    /// @dev The ipfs of all fruit tokens will be updated and secure with a new
+    /// CID every season. The cid to the ipfs will be linked used a DNS with
+    /// our personal domain name. All metadata and pictures will be hosted
+    /// on the IPFS
     function uri(uint256 _tokenId)
         public
         view
@@ -268,29 +287,40 @@ contract DemoOptimized is
         override
         returns (string memory)
     {
-        if (
-            (_tokenId > fruitTokenIdLowerParam &&
-                _tokenId < fruitTokenIdUpperParam) ||
-            (_tokenId > fourInOneTokenIdLowerParam &&
-                _tokenId < fourInOneTokenIdUpperParam)
-        ) {
-            return _uriPreview;
-        } else {
+        if (_tokenId > 100000) {
             return
                 string(
-                    abi.encodePacked(_uri, Strings.toString(_tokenId), ".json")
+                    abi.encodePacked(
+                        _uri,
+                        "/4in1s/",
+                        Strings.toString(_tokenId),
+                        ".json"
+                    )
                 );
         }
-    }
 
-    /// @dev change uri incase we have any technical error. LikelyHood: VeryUnlikely
-    // function setUri(string memory uriSetter, string memory uriPreviewSetter)
-    //     public
-    //     onlyOwner
-    // {
-    //     _uri = uriSetter;
-    //     _uriPreview = uriPreviewSetter;
-    // }
+        if (_tokenId == 0) {
+            return
+                string(
+                    abi.encodePacked(
+                        _uri,
+                        "/receipts/",
+                        Strings.toString(_tokenId),
+                        ".json"
+                    )
+                );
+        }
+
+        return
+            string(
+                abi.encodePacked(
+                    _uri,
+                    "/fruits/",
+                    Strings.toString(_tokenId),
+                    ".json"
+                )
+            );
+    }
 
     function _setUri(string memory uriSetter, string memory uriPreviewSetter)
         internal
@@ -305,72 +335,112 @@ contract DemoOptimized is
     // ------------------------- //
 
     /// @dev sale start time will set x ammount of time after presale start time.
-    /// Leads to less dynamics. Can set time and use modifier to start the sale.
-    /// Sale ends when all bundles are sold.
+    /// Leads to less dynamics. The time is in seconds from the 1970 epoch
     /// @param _presaleStartTime argument must be set in seconds
     /// @param _timeBetweenSales argument must be set in seconds
-    /// @dev can define the entirety of our season sale in this one function call?
-    // function setSaleTimeAndBundleSupply
-    function setPresaleStartTime(
-        uint256 _presaleStartTime,
-        uint256 _timeBetweenSales
-    ) public onlyOwner {
-        presaleStartTime = _presaleStartTime;
-        saleStartTime = _presaleStartTime + _timeBetweenSales;
-        // emit SaleHasBeenSet(presaleStartTime, saleStartTime);
-    }
+    // function setPresaleStartTime(
+    //     uint256 _presaleStartTime,
+    //     uint256 _timeBetweenSales
+    // ) public onlyOwner {
+    //     presaleStartTime = _presaleStartTime;
+    //     publicSaleStartTime = _presaleStartTime + _timeBetweenSales;
+    //     emit SaleHasBeenSet(presaleStartTime, publicSaleStartTime);
+    // }
 
+    // function getSaleStartTimes() public view returns (string memory) {
+    //     return
+    //         string(
+    //             abi.encodePacked(
+    //                 "Presale is at",
+    //                 Strings.toString(presaleStartTime),
+    //                 ", and public sale is at",
+    //                 Strings.toString(publicSaleStartTime),
+    //                 " seconds from epoch"
+    //             )
+    //         );
+    // }
+
+    /// @dev set this based on volatility of market
     function setPricePerBundle(uint256 _gwei) public onlyOwner {
         pricePerBundle = _gwei;
-        emit PricePerBundle(msg.sender, _gwei);
+        // emit PricePerBundle(msg.sender, _gwei);
     }
 
     function getPricePerBundle() public view returns (uint256) {
         return pricePerBundle;
     }
 
-    //     // ------------------------- //
-    //     /// @dev VIF section       ///
-    //     // ------------------------- //
+    // ------------------------------ //
+    /// @dev VIF and Presale section ///
+    // ------------------------------ //
 
+    /// @dev VIF members will have confirmed spots in minting
+    /* @notice VIF members can mint up to three times. Once in VIF sale,
+        onces in Presale, and once in public. We did this to let the
+        member be as active as they want and removed the ability to
+        mint all 3 bundles at once. This leads to ore fairness in minting
+    */
     function setVIFMember(address[] memory _vifs) public onlyOwner {
         for (uint256 i = 0; i < _vifs.length; i++) {
-            if (addressToVIF[_vifs[i]] == 1) {
-                continue;
-            } else {
-                addressToVIF[_vifs[i]] = 1;
-                veryImportantFruit.push(_vifs[i]);
-            }
+            addressToVifMember[_vifs[i]] = 1;
+            vifCount++;
         }
     }
 
-    /// @dev all vif members will be reset at the end of every sale
-    /// We will start fresh before every mint
-    function resetVIF() public onlyOwner {
-        for (uint256 i = 0; i < veryImportantFruit.length; i++) {
-            addressToVIF[veryImportantFruit[i]] = 0;
+    function setFruityMember(address[] memory _fruities) public onlyOwner {
+        for (uint256 i = 0; i < _fruities.length; i++) {
+            addressToPresaleMember[_fruities[i]] = 1;
+            presaleMemberList.push(_fruities[i]);
         }
-        delete veryImportantFruit;
     }
 
+    /// @dev manualy remove VIF members with given addresses
+    function removeVIFMembers(address[] memory _vifs) public onlyOwner {
+        for (uint256 i = 0; i < _vifs.length; i++) {
+            addressToVifMember[_vifs[i]] = 0;
+            vifCount--;
+        }
+    }
+
+    function resetPresaleMembers() public onlyOwner {
+        for (uint256 i = 0; i < presaleMemberList.length; i++) {
+            addressToPresaleMember[presaleMemberList[i]] = 0;
+        }
+        delete presaleMemberList;
+    }
+
+    /// NOTE: this can be implemented if the contract has sufficient room to add to
     /// @dev can be used to get a vifMember
     /// @notice if the address you entered returns with 1 it has been VIFed
-    function getVIFMember(address _address)
-        public
-        view
-        returns (address, string memory)
-    {
-        return (
-            _address,
-            string(abi.encodePacked(Strings.toString(addressToVIF[_address])))
-        );
-    }
+    // function getMember(address _address) public view returns (string memory) {
+    //     if (addressToVifMember[_address] == 1) {
+    //         return string(abi.encodePacked("The address entered is VIF'd"));
+    //     }
+    //     if (addressToPresaleMember[_address] == 1) {
+    //         return
+    //             string(
+    //                 abi.encodePacked("The address entered is a Presale Member")
+    //             );
+    //     }
+    //     return
+    //         string(
+    //             abi.encodePacked(
+    //                 "The address entered is NOT a VIF or Presale Member"
+    //             )
+    //         );
+    // }
 
-    /// @dev used to see how many vifs we have given out
-    function getVIFCount() public view onlyOwner returns (string memory) {
+    /// @dev used to see how many vifs and fruity members there are
+    function getMemberCount() public view onlyOwner returns (string memory) {
         return
             string(
-                abi.encodePacked(Strings.toString(veryImportantFruit.length))
+                abi.encodePacked(
+                    "There is/are ",
+                    Strings.toString(vifCount),
+                    " VIF Member(s). There is/are ",
+                    Strings.toString(presaleMemberList.length),
+                    " Presale Member(s)."
+                )
             );
     }
 }

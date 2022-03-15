@@ -215,3 +215,6 @@ TODOS for implementation
   Bot Detector. Only one account address associated with one ip. Look at the ropsten ether faucet source code for reference. They put a 2 week limit on wallet address and the ip associated with them. I can put the limit on the wallets until the next sale. website(https://github.com/wu4f/ropsten_faucet). This technique will stop user from switching their accounts on their wallets to pay for more than one mint. A work around is to use a vpn and another account address.
 
 #Contract Security
+
+#BIG CHANGES
+I removed the parameters of the URI. I will implement hidden and prereveal features with the dns and ipfs only. This will save gas on deployment and setting each season. This also makes the deployment of each season a little less dependent on our contract.

@@ -512,8 +512,8 @@
       ]
     },
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/DemoOptimized.sol": {
-      "lastModificationDate": 1646357387510,
-      "contentHash": "ab3d33d06bb9eb6f704f873f40c286e4",
+      "lastModificationDate": 1647361496290,
+      "contentHash": "6eea02ecd5b79e7c691646a4782918f9",
       "sourceName": "contracts/DemoOptimized.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -544,8 +544,7 @@
         "@openzeppelin/contracts/utils/Context.sol",
         "./tokens/IERC1155MetadataURI.sol",
         "./tokens/ERC1155.sol",
-        "./utils/Ownable.sol",
-        "hardhat/console.sol"
+        "./utils/Ownable.sol"
       ],
       "versionPragmas": [
         "^0.8.0"

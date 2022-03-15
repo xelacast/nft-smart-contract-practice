@@ -1,5 +1,6 @@
 const { utils } = require("ethers");
 const { ethers } = require("hardhat");
+const { ContractType } = require("hardhat/internal/hardhat-network/stack-traces/model");
 
 
 async function main() {
@@ -11,8 +12,9 @@ async function main() {
 
   // Deployment of contract
   Contract = await ethers.getContractFactory("DemoOptimized");
-  contract = await Contract.deploy(URI, "hidden.json");
+  contract = await Contract.deploy(URI);
   [owner, addr1, addr2, addr3, addr4, addr5, addr6] = await ethers.getSigners();
+
 
   console.log("Contract deployed with id: ", contract.address);
 
@@ -24,7 +26,8 @@ async function main() {
     // data: "1"
   }
 
-  await contract.connect(owner).setPresaleStartTime(0,1);
+  // await contract.connect(owner).setPresaleStartTime(0,1);
+  await contract.connect(owner).setSeason(0,1)
 
   // how you send arguments and ether into a connected contract
   await contract.connect(addr1).mintBundle(1, options);

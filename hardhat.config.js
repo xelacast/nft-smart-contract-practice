@@ -24,10 +24,10 @@
        gasPrice: 100000000000,
        gas: 100000000
      },
-     rinkeby: {
-       url: `https://eth-rinkbey.alchemyapi.io/v2/${API_URL}`,
-       accounts: [`0x${PRIVATE_KEY}`]
-     }
+    //  rinkeby: {
+    //    url: `https://eth-rinkbey.alchemyapi.io/v2/${API_URL}`,
+    //    accounts: [`0x${PRIVATE_KEY}`]
+    //  }
    },
    settings: {
     optimizer: {
