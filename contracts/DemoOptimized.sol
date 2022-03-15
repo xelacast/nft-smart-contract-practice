@@ -11,7 +11,7 @@ import "./tokens/IERC1155MetadataURI.sol";
 import "./tokens/ERC1155.sol";
 import "./utils/Ownable.sol";
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract DemoOptimized is
     ERC1155,
@@ -67,15 +67,17 @@ contract DemoOptimized is
     mapping(address => Cutee) private addressToCutee;
 
     uint256 presaleMintCount = 0;
+    uint256 vifMintCount = 0;
 
-    uint256 vifCount;
+    address[] mintersList;
+
+    address[] vifMemberList;
     address[] presaleMemberList;
 
     event IncreaseReceiptSupply(address _sender, uint256 _supply);
 
     constructor(string memory uri1, string memory uriPreview1) ERC1155() {
         _setUri(uri1, uriPreview1);
-        vifCount = 0;
     }
 
     /*
@@ -113,13 +115,15 @@ contract DemoOptimized is
 
         if (block.timestamp < presaleStartTime) {
             require(
-                addressToVifMember[msg.sender] > 0,
+                addressToCutee[msg.sender].vifMember,
                 "VIF sale is active but you're are not a VIF, wait for presale"
             );
             require(
-                bundleBalance[msg.sender] <= 1,
+                addressToCutee[msg.sender].bundleBalance < 1,
                 "You can only mint one fruit basket during VIF sale"
             );
+            require(vifMintCount > 0, "All VIF bundles have been sold");
+            vifMintCount--;
         }
         // Presale
         else if (
@@ -127,10 +131,10 @@ contract DemoOptimized is
             block.timestamp < publicSaleStartTime
         ) {
             require(
-                (addressToVifMember[msg.sender] > 0 &&
-                    bundleBalance[msg.sender] < 2) ||
-                    (addressToPresaleMember[msg.sender] > 0 &&
-                        bundleBalance[msg.sender] < 1),
+                (addressToCutee[msg.sender].vifMember &&
+                    addressToCutee[msg.sender].bundleBalance < 2) ||
+                    (addressToCutee[msg.sender].presaleMember &&
+                        addressToCutee[msg.sender].bundleBalance < 1),
                 "Can only mint one fruit basket during presale."
             );
             require(
@@ -140,11 +144,11 @@ contract DemoOptimized is
             presaleMintCount++;
         } else {
             require(
-                (addressToVifMember[msg.sender] > 0 &&
-                    bundleBalance[msg.sender] < 3) ||
-                    (addressToPresaleMember[msg.sender] > 0 &&
-                        bundleBalance[msg.sender] < 2) ||
-                    bundleBalance[msg.sender] < 1,
+                (addressToCutee[msg.sender].vifMember &&
+                    addressToCutee[msg.sender].bundleBalance < 3) ||
+                    (addressToCutee[msg.sender].presaleMember &&
+                        addressToCutee[msg.sender].bundleBalance < 2) ||
+                    addressToCutee[msg.sender].bundleBalance < 1,
                 "Can only mint one fruit basket during public sale."
             );
         }
@@ -172,21 +176,21 @@ contract DemoOptimized is
         @notice the mintPass can be used for any of our mints if and only if
         There are any bundles left
     */
-    function mintPassGiveaway() public {
+    function useMintPass() public {
         require(bundleSupply > 0, "All bundles have been minted.");
         require(
-            addressToMintPass[msg.sender] > 0,
+            addressToCutee[msg.sender].mintPass > 0,
             "You do not have a free mint"
         );
 
         address recipient = _msgSender();
 
-        addressToMintPass[recipient]--;
+        addressToCutee[recipient].mintPass--;
 
         _mintBundle(recipient);
     }
 
-    function mintPass(address[] calldata _giveaways) public onlyOwner {
+    function mintPassGiveaway(address[] calldata _giveaways) public onlyOwner {
         for (uint256 i = 0; i < _giveaways.length; i++) {
             addressToMintPass[_giveaways[i]]++;
         }
@@ -215,11 +219,21 @@ contract DemoOptimized is
         idHolder[4] = fourInOneTokenId;
         fourInOneTokenId++;
 
-        addressToCutee[msg.sender].bundleBalance++;
+        addressToCutee[_to].bundleBalance++;
 
-        _mintBatch(msg.sender, idHolder, batchMintAmmount, "");
+        _mintBatch(_to, idHolder, batchMintAmmount, "");
 
         bundleSupply--;
+
+        if (
+            !(addressToCutee[_to].vifMember ||
+                addressToCutee[_to].presaleMember)
+        ) {
+            mintersList.push(_to);
+        }
+
+        // this costs ~42000 gas units
+        // @dev tracking accounts to mint to reset for next mint
     }
 
     /*
@@ -243,7 +257,7 @@ contract DemoOptimized is
 
         /// TODO reset all accounts in bundle balance to 0;
 
-        resetPresaleMembers();
+        resetAddressToCutee();
 
         emit IncreaseReceiptSupply(msg.sender, 3000);
     }
@@ -395,14 +409,14 @@ contract DemoOptimized is
     */
     function setVIFMember(address[] memory _vifs) public onlyOwner {
         for (uint256 i = 0; i < _vifs.length; i++) {
-            addressToVifMember[_vifs[i]] = 1;
-            vifCount++;
+            addressToCutee[_vifs[i]] = true;
+            vifMemberList.push(_vifs[i]);
         }
     }
 
     function setFruityMember(address[] memory _fruities) public onlyOwner {
         for (uint256 i = 0; i < _fruities.length; i++) {
-            addressToPresaleMember[_fruities[i]] = 1;
+            addressToCutee[_fruities[i]] = true;
             presaleMemberList.push(_fruities[i]);
         }
     }
@@ -411,15 +425,25 @@ contract DemoOptimized is
     function removeVIFMembers(address[] memory _vifs) public onlyOwner {
         for (uint256 i = 0; i < _vifs.length; i++) {
             addressToVifMember[_vifs[i]] = 0;
-            vifCount--;
+            for (uint256 i = 0; i < vifMemberList.length; i++) {
+                if (_vifs[i] == vifMemberList[i]) {
+                    addressToCutee[_vifs[i]].vifMember = false;
+                    if (vifMemberList.length > 1) {
+                        address lastMember = vifMemberList[-1];
+                        vifMemberList.pop();
+                        vifMemberList[i] = lastMember;
+                    } else {}
+                }
+            }
         }
     }
 
-    function resetPresaleMembers() public onlyOwner {
-        for (uint256 i = 0; i < presaleMemberList.length; i++) {
-            addressToPresaleMember[presaleMemberList[i]] = 0;
+    function resetAddressToCutee() public onlyOwner {
+        for (uint256 i = 0; i < mintersList.length; i++) {
+            addressToCutee[mintersList[i]].bundleBalance = 0;
+            addressToCutee[mintersList[i]].presaleMember = false;
         }
-        delete presaleMemberList;
+        delete mintersList;
     }
 
     /// NOTE: this can be implemented if the contract has sufficient room to add to

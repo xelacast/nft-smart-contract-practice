@@ -512,8 +512,8 @@
       ]
     },
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/DemoOptimized.sol": {
-      "lastModificationDate": 1647364456050,
-      "contentHash": "2cb3f7268b90e6b32ced6fcacfe419a5",
+      "lastModificationDate": 1647369135960,
+      "contentHash": "f48c352db554ca8f8d9c38d9f9131cf9",
       "sourceName": "contracts/DemoOptimized.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -544,7 +544,8 @@
         "@openzeppelin/contracts/utils/Context.sol",
         "./tokens/IERC1155MetadataURI.sol",
         "./tokens/ERC1155.sol",
-        "./utils/Ownable.sol"
+        "./utils/Ownable.sol",
+        "hardhat/console.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
@@ -591,7 +592,7 @@
       ]
     },
     "/home/jhuiice/home/cuteeFruitee/web3Practice/demoDapp/contracts/tokens/ERC1155.sol": {
-      "lastModificationDate": 1646079917200,
+      "lastModificationDate": 1647367433720,
       "contentHash": "e35a40e88364e9298d95bcdaf5247bb0",
       "sourceName": "contracts/tokens/ERC1155.sol",
       "solcConfig": {
