@@ -50,10 +50,12 @@ contract DemoOptimized is
     // address[] veryImportantFruit;
 
     /// @dev array to show sale options
-    // struct CuteeSale {
-    //     uint32 vif;
-    //     uint32 presale;
-    // }
+    struct Cutee {
+        bool vifMember;
+        bool presaleMember;
+        uint32 mintPass;
+        uint32 bundleBalance;
+    }
 
     /// @dev balance of bundles minted
     /// @notice this balance will be tracked and reset for every season
@@ -62,6 +64,9 @@ contract DemoOptimized is
     mapping(address => uint256) private addressToVifMember;
     mapping(address => uint256) private addressToPresaleMember;
     mapping(address => uint256) private addressToMintPass;
+    mapping(address => Cutee) private addressToCutee;
+
+    uint256 presaleMintCount = 0;
 
     uint256 vifCount;
     address[] presaleMemberList;
@@ -128,6 +133,11 @@ contract DemoOptimized is
                         bundleBalance[msg.sender] < 1),
                 "Can only mint one fruit basket during presale."
             );
+            require(
+                presaleMintCount < 345,
+                "All presale fruit baskets have been sold."
+            );
+            presaleMintCount++;
         } else {
             require(
                 (addressToVifMember[msg.sender] > 0 &&
@@ -145,7 +155,7 @@ contract DemoOptimized is
     /**
         @dev primary mint for all mints
      */
-    function mintBundle() public payable nonReentrant isSaleActive {
+    function mintBundle() public payable isSaleActive nonReentrant {
         require(
             msg.value >= 0.1 ether,
             "Not enough ether was sent to purchase your fruit basket."
@@ -205,7 +215,7 @@ contract DemoOptimized is
         idHolder[4] = fourInOneTokenId;
         fourInOneTokenId++;
 
-        bundleBalance[msg.sender]++;
+        addressToCutee[msg.sender].bundleBalance++;
 
         _mintBatch(msg.sender, idHolder, batchMintAmmount, "");
 
@@ -229,6 +239,9 @@ contract DemoOptimized is
 
         bundleSupply = 1000;
         receiptSupply = receiptSupply + 3000;
+        presaleMintCount = 0;
+
+        /// TODO reset all accounts in bundle balance to 0;
 
         resetPresaleMembers();
 
