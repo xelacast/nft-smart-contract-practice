@@ -60,10 +60,10 @@ contract DemoOptimized is
     /// @dev balance of bundles minted
     /// @notice this balance will be tracked and reset for every season
     /// TODO redo this with a struct and one mapping. This might save gas
-    mapping(address => uint256) private bundleBalance;
-    mapping(address => uint256) private addressToVifMember;
-    mapping(address => uint256) private addressToPresaleMember;
-    mapping(address => uint256) private addressToMintPass;
+    // mapping(address => uint256) private bundleBalance;
+    // mapping(address => uint256) private addressToVifMember;
+    // mapping(address => uint256) private addressToPresaleMember;
+    // mapping(address => uint256) private addressToMintPass;
     mapping(address => Cutee) private addressToCutee;
 
     uint256 presaleMintCount = 0;
@@ -192,7 +192,7 @@ contract DemoOptimized is
 
     function mintPassGiveaway(address[] calldata _giveaways) public onlyOwner {
         for (uint256 i = 0; i < _giveaways.length; i++) {
-            addressToMintPass[_giveaways[i]]++;
+            addressToCutee[_giveaways[i]].mintPass++;
         }
     }
 
@@ -254,8 +254,6 @@ contract DemoOptimized is
         bundleSupply = 1000;
         receiptSupply = receiptSupply + 3000;
         presaleMintCount = 0;
-
-        /// TODO reset all accounts in bundle balance to 0;
 
         resetAddressToCutee();
 
@@ -407,16 +405,16 @@ contract DemoOptimized is
         member be as active as they want and removed the ability to
         mint all 3 bundles at once. This leads to ore fairness in minting
     */
-    function setVIFMember(address[] memory _vifs) public onlyOwner {
+    function setVifMember(address[] memory _vifs) public onlyOwner {
         for (uint256 i = 0; i < _vifs.length; i++) {
-            addressToCutee[_vifs[i]] = true;
+            addressToCutee[_vifs[i]].vifMember = true;
             vifMemberList.push(_vifs[i]);
         }
     }
 
     function setFruityMember(address[] memory _fruities) public onlyOwner {
         for (uint256 i = 0; i < _fruities.length; i++) {
-            addressToCutee[_fruities[i]] = true;
+            addressToCutee[_fruities[i]].presaleMember = true;
             presaleMemberList.push(_fruities[i]);
         }
     }
@@ -424,20 +422,20 @@ contract DemoOptimized is
     /// @dev manualy remove VIF members with given addresses
     function removeVIFMembers(address[] memory _vifs) public onlyOwner {
         for (uint256 i = 0; i < _vifs.length; i++) {
-            addressToVifMember[_vifs[i]] = 0;
-            for (uint256 i = 0; i < vifMemberList.length; i++) {
-                if (_vifs[i] == vifMemberList[i]) {
-                    addressToCutee[_vifs[i]].vifMember = false;
-                    if (vifMemberList.length > 1) {
-                        address lastMember = vifMemberList[-1];
-                        vifMemberList.pop();
-                        vifMemberList[i] = lastMember;
-                    } else {}
+            addressToCutee[_vifs[i]].vifMember = false;
+            for (uint256 j = 0; j < vifMemberList.length; i++) {
+                if (_vifs[i] == vifMemberList[j]) {
+                    address lastMember = vifMemberList[
+                        vifMemberList.length - 1
+                    ];
+                    vifMemberList.pop();
+                    vifMemberList[i] = lastMember;
                 }
             }
         }
     }
 
+    /// @dev reset all bundleBalances and presaleSpots
     function resetAddressToCutee() public onlyOwner {
         for (uint256 i = 0; i < mintersList.length; i++) {
             addressToCutee[mintersList[i]].bundleBalance = 0;
@@ -473,7 +471,7 @@ contract DemoOptimized is
             string(
                 abi.encodePacked(
                     "There is/are ",
-                    Strings.toString(vifCount),
+                    Strings.toString(vifMemberList.length),
                     " VIF Member(s). There is/are ",
                     Strings.toString(presaleMemberList.length),
                     " Presale Member(s)."
