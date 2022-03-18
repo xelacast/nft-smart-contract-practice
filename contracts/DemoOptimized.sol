@@ -1,10 +1,11 @@
 //SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 // must be revamped for gas optimization
 import "./tokens/IERC1155MetadataURI.sol";
@@ -19,147 +20,157 @@ contract DemoOptimized is
     ReentrancyGuard,
     IERC1155MetadataURI
 {
+    using Strings for uint256;
+
     uint256 constant receiptTokenId = 0;
     uint256 fruitTokenId = 1;
     uint256 fourInOneTokenId = 100001;
 
-    /// @dev will always be reset to 1000; when all bundles are sold
-    /// NOTE edge case what if all bundles for a season dont sell and you want to mint the new season? how would the ids work? or we must not release a new season unless the last season is sold out.
-    uint256 bundleSupply = 1000;
-    uint256 receiptSupply = 3000;
+    uint256 bundleSupply;
+    uint256 receiptSupply;
 
     /// @notice @dev 100000000 gwei
     uint256 pricePerBundle = 0.1 ether;
 
-    /// @dev lower params will change with seasons
-    // uint256 fruitTokenIdLowerParam = 0;
-    // uint256 fourInOneTokenIdLowerParam = 99999;
-    // uint256 fruitTokenIdUpperParam = 100001;
-    // uint256 fourInOneTokenIdUpperParam = 999999;
-
-    /// @dev presaleStartTime will be set with each season launch
+    // @dev merkleRoots for members
+    bytes32 merkleRoot;
+    // NOTE make these booleans and create an api that interacts with them
+    // this method might be safer to do.
     uint256 vifSaleStartTime;
     uint256 presaleStartTime;
     uint256 publicSaleStartTime;
+    bool vifSaleIsActive = false;
+    bool fruitiesSaleIsActive = false;
+    bool publicSaleIsActive = false;
 
     string private _uri;
-    string private _uriPreview;
 
-    /// @dev array to reset the VIF mapping
-    // address[] presaleMembers;
-    // address[] veryImportantFruit;
+    uint256 public presaleMintCount;
+    uint256 public vifMintCount;
 
-    /// @dev array to show sale options
-    struct Cutee {
-        bool vifMember;
-        bool presaleMember;
-        uint32 mintPass;
-        uint32 bundleBalance;
-    }
+    address[] public mintersList;
 
-    /// @dev balance of bundles minted
-    /// @notice this balance will be tracked and reset for every season
-    /// TODO redo this with a struct and one mapping. This might save gas
-    // mapping(address => uint256) private bundleBalance;
-    // mapping(address => uint256) private addressToVifMember;
-    // mapping(address => uint256) private addressToPresaleMember;
-    // mapping(address => uint256) private addressToMintPass;
-    mapping(address => Cutee) private addressToCutee;
-
-    uint256 presaleMintCount = 0;
-    uint256 vifMintCount = 0;
-
-    address[] mintersList;
-
-    address[] vifMemberList;
-    address[] presaleMemberList;
+    mapping(address => uint256) private bundleBalance;
+    mapping(address => uint256) public addressToMintPass;
 
     event IncreaseReceiptSupply(address _sender, uint256 _supply);
 
-    constructor(string memory uri1, string memory uriPreview1) ERC1155() {
-        _setUri(uri1, uriPreview1);
+    constructor(string memory uri1) ERC1155() {
+        _setUri(uri1);
+        vifMintCount = 100;
+        presaleMintCount = 345;
+        receiptSupply = 3000;
+        bundleSupply = 1000;
     }
 
+    function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {
+        merkleRoot = _merkleRoot;
+    }
+
+    function _verifyMerkle(bytes32[] memory _merkleProof, uint256 _maxAmount)
+        internal
+        view
+        returns (bool)
+    {
+        address sender = _msgSender();
+
+        bytes32 leaf = keccak256(abi.encode(sender, _maxAmount.toString()));
+
+        return MerkleProof.verify(_merkleProof, merkleRoot, leaf);
+    }
+
+    // ---------------- //
+    // ----- MINT ----- //
+    // ---------------- //
+
     /*
-    @dev uses block time stamp to start presale and sale
-    based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales)
-    saleTime will be set with _presaleStartTime+_timeBetweenSales
+        @dev uses block time stamp to start presale and sale
+        based on setPresaleStartTime(uint256 _presaleStartTime, uint256 _timeBetweenSales)
+        saleTime will be set with _presaleStartTime+_timeBetweenSales
     */
-    // modifier isSaleActive() {
-    //     // VIF sale
-    //     require(block.timestamp > vifSaleStartTime, "VIF sale has not started");
-    //     if (block.timestamp < presaleStartTime) {
-    //         require(
-    //             addressToVifMember[msg.sender] > 0,
-    //             "VIF sale is active but you're are not a VIF, wait for presale"
-    //         );
-    //     }
-    //     // Presale
-    //     else if (
-    //         block.timestamp > presaleStartTime &&
-    //         block.timestamp < publicSaleStartTime
-    //     ) {
-    //         require(
-    //             addressToPresaleMember[msg.sender] > 0 ||
-    //                 addressToVifMember[msg.sender] > 0,
-    //             "Presale is active but you have not been given a spot in presale"
-    //         );
+
+    // bool vifSaleIsActive;
+    // bool fruitiesSaleIsActive;
+    // bool publicSaleIsActive;
+
+    //TODO set merkleTreeRoot
+    // modifier isSaleActive(_maxAmount) {
+    //     // TODO logic in timing and verifying merkle tree
+    //     if(vifSaleIsActive) {
+    //         require(_verifyMerkle(_merkleProof, _maxAmount);)
     //     }
 
     //     _;
     // }
-    // TODO make a new modifier to check counts of bunldes.
-    modifier isSaleActive() {
-        // VIF sale
-        require(block.timestamp > vifSaleStartTime, "VIF sale has not started");
 
-        if (block.timestamp < presaleStartTime) {
-            require(
-                addressToCutee[msg.sender].vifMember,
-                "VIF sale is active but you're are not a VIF, wait for presale"
-            );
-            require(
-                addressToCutee[msg.sender].bundleBalance < 1,
-                "You can only mint one fruit basket during VIF sale"
-            );
-            require(vifMintCount > 0, "All VIF bundles have been sold");
-            vifMintCount--;
-        }
-        // Presale
-        else if (
-            block.timestamp > presaleStartTime &&
-            block.timestamp < publicSaleStartTime
-        ) {
-            require(
-                (addressToCutee[msg.sender].vifMember &&
-                    addressToCutee[msg.sender].bundleBalance < 2) ||
-                    (addressToCutee[msg.sender].presaleMember &&
-                        addressToCutee[msg.sender].bundleBalance < 1),
-                "Can only mint one fruit basket during presale."
-            );
-            require(
-                presaleMintCount < 345,
-                "All presale fruit baskets have been sold."
-            );
-            presaleMintCount++;
-        } else {
-            require(
-                (addressToCutee[msg.sender].vifMember &&
-                    addressToCutee[msg.sender].bundleBalance < 3) ||
-                    (addressToCutee[msg.sender].presaleMember &&
-                        addressToCutee[msg.sender].bundleBalance < 2) ||
-                    addressToCutee[msg.sender].bundleBalance < 1,
-                "Can only mint one fruit basket during public sale."
-            );
-        }
+    function setVifSale() public onlyOwner {
+        vifSaleIsActive = !vifSaleIsActive;
+    }
 
-        _;
+    function setFruitieSale() public onlyOwner {
+        fruitiesSaleIsActive = !fruitiesSaleIsActive;
+    }
+
+    function setPublicSale() public onlyOwner {
+        publicSaleIsActive = !publicSaleIsActive;
     }
 
     /**
         @dev primary mint for all mints
      */
-    function mintBundle() public payable isSaleActive nonReentrant {
+    function mintBundle(bytes32[] memory _merkleProof, uint256 _maxAmount)
+        public
+        payable
+        nonReentrant
+    {
+        address sender = _msgSender();
+
+        // I have to activate and reactivate sales. When VIF ends
+        // set it false and set fruities sale to true
+        // When fruity sale ends set fruity to false and activate
+        // public sale
+        if (vifSaleIsActive && _verifyMerkle(_merkleProof, 30)) {
+            require(
+                bundleBalance[sender] < 1,
+                "You have bought the max amount of fruit baskets for the VIF sale. Wait until Fruity sale to purchase more."
+            );
+        }
+        if (fruitiesSaleIsActive && _verifyMerkle(_merkleProof, _maxAmount)) {
+            if (_maxAmount == 30) {
+                require(
+                    bundleBalance[sender] < 2,
+                    "You have bought the max amount of fruit baskets as a VIF member. Wait until public sale to purchase more."
+                );
+            }
+        }
+        if (_maxAmount == 20) {
+            require(
+                bundleBalance[sender] < 1,
+                "You have bought the max amount of fruit baskets as a Fruity Member. Wait until public sale."
+            );
+        }
+        if (publicSaleIsActive) {
+            // console.log(_maxAmount);
+            // console.log(_verifyMerkle(_merkleProof, _maxAmount));
+            if (_maxAmount == 30 && _verifyMerkle(_merkleProof, _maxAmount)) {
+                require(
+                    bundleBalance[sender] < 3,
+                    "You have bought the max amount of fruit baskets as a VIF member."
+                );
+            } else if (
+                _maxAmount == 20 && _verifyMerkle(_merkleProof, _maxAmount)
+            ) {
+                require(
+                    bundleBalance[sender] < 2,
+                    "You have bought the max amount of fruit baskets as a Fruity Member."
+                );
+            } else {
+                require(
+                    bundleBalance[sender] < 1,
+                    "Only allowed one purchase of a fruitbasket during presale"
+                );
+            }
+        }
         require(
             msg.value >= 0.1 ether,
             "Not enough ether was sent to purchase your fruit basket."
@@ -169,6 +180,12 @@ contract DemoOptimized is
         address recipient = _msgSender();
 
         _mintBundle(recipient);
+
+        if (bundleBalance[recipient] < 1) {
+            mintersList.push(recipient);
+        }
+
+        bundleBalance[recipient]++;
     }
 
     /*
@@ -179,24 +196,40 @@ contract DemoOptimized is
     function useMintPass() public {
         require(bundleSupply > 0, "All bundles have been minted.");
         require(
-            addressToCutee[msg.sender].mintPass > 0,
+            addressToMintPass[msg.sender] > 0,
             "You do not have a free mint"
         );
 
         address recipient = _msgSender();
 
-        addressToCutee[recipient].mintPass--;
+        addressToMintPass[recipient]--;
 
         _mintBundle(recipient);
     }
 
     function mintPassGiveaway(address[] calldata _giveaways) public onlyOwner {
         for (uint256 i = 0; i < _giveaways.length; i++) {
-            addressToCutee[_giveaways[i]].mintPass++;
+            addressToMintPass[_giveaways[i]]++;
         }
     }
 
-    /// @dev _mintBundle is used for giveaways and sale mints
+    function getMintPassCount(address _recipient)
+        public
+        view
+        returns (string memory)
+    {
+        return
+            string(
+                abi.encodePacked(
+                    Strings.toString(addressToMintPass[_recipient])
+                )
+            );
+    }
+
+    /**
+        @dev _mintBundle is used for giveaways and sale mints
+    */
+
     function _mintBundle(address _to) private {
         uint256[] memory batchMintAmmount = new uint256[](6);
         uint256[] memory idHolder = new uint256[](6);
@@ -219,33 +252,28 @@ contract DemoOptimized is
         idHolder[4] = fourInOneTokenId;
         fourInOneTokenId++;
 
-        addressToCutee[_to].bundleBalance++;
-
         _mintBatch(_to, idHolder, batchMintAmmount, "");
 
         bundleSupply--;
-
-        if (
-            !(addressToCutee[_to].vifMember ||
-                addressToCutee[_to].presaleMember)
-        ) {
-            mintersList.push(_to);
-        }
-
-        // this costs ~42000 gas units
-        // @dev tracking accounts to mint to reset for next mint
     }
 
+    // ---------------- //
+    // ---- SEASON ---- //
+    // ---------------- //
+
     /*
-    @dev sets necessary params to conclude our post season
-    These things must be done
-    Set Bundle Supply to 1000 only if and only if bundle supply is at 0
-    increase the receipt supply by 3000
-    reset the presale members for past season
-    emit event to document increase in reeipts(burn currency)
+        @dev sets necessary params
+        These things must be done
+        Set Bundle Supply to 1000 only if and only if bundle supply is at 0
+        increase the receipt supply by 3000
+        reset the presale members for past season
+        emit event to document increase in reeipts(burn currency)
     */
 
-    function setSeason() public onlyOwner {
+    function setSeason(uint256 _vifMintAmount, uint256 _presaleMintAmount)
+        public
+        onlyOwner
+    {
         require(
             bundleSupply <= 0,
             "All bundles have not been given away or sold"
@@ -253,12 +281,25 @@ contract DemoOptimized is
 
         bundleSupply = 1000;
         receiptSupply = receiptSupply + 3000;
-        presaleMintCount = 0;
 
-        resetAddressToCutee();
+        vifMintCount = _vifMintAmount;
+        presaleMintCount = _presaleMintAmount;
+
+        _resetBundleBalances();
 
         emit IncreaseReceiptSupply(msg.sender, 3000);
     }
+
+    function _resetBundleBalances() internal {
+        for (uint256 i = 0; i < mintersList.length; i++) {
+            bundleBalance[mintersList[i]] = 0;
+        }
+        delete mintersList;
+    }
+
+    // ---------------- //
+    // ----- SALE ----- //
+    // ---------------- //
 
     /// @dev time is in seconds from the January 1st, 1970 Epoch
     function setSaleTime(
@@ -288,8 +329,12 @@ contract DemoOptimized is
         return bundleSupply;
     }
 
-    function getBalance() public view returns (uint256) {
-        return address(this).balance;
+    function setPricePerBundle(uint256 _gwei) public onlyOwner {
+        pricePerBundle = _gwei;
+    }
+
+    function getPricePerBundle() public view returns (uint256) {
+        return pricePerBundle;
     }
 
     function withdrawBalance() external onlyOwner {
@@ -297,14 +342,11 @@ contract DemoOptimized is
         payable(msg.sender).transfer(address(this).balance);
     }
 
-    // ------------------------- //
-    /// @dev uri section       ///
-    // ------------------------- //
+    // ---------------- //
+    // ----- URI ------ //
+    // ---------------- //
 
-    /// @dev The ipfs of all fruit tokens will be updated and secure with a new
-    /// CID every season. The cid to the ipfs will be linked used a DNS with
-    /// our personal domain name. All metadata and pictures will be hosted
-    /// on the IPFS
+    /// @dev uri will point to a dns all all data is stored on the ipfs
     function uri(uint256 _tokenId)
         public
         view
@@ -347,135 +389,7 @@ contract DemoOptimized is
             );
     }
 
-    function _setUri(string memory uriSetter, string memory uriPreviewSetter)
-        internal
-        virtual
-    {
+    function _setUri(string memory uriSetter) internal virtual {
         _uri = uriSetter;
-        _uriPreview = uriPreviewSetter;
-    }
-
-    // ------------------------- //
-    /// @dev sale section       ///
-    // ------------------------- //
-
-    /// @dev sale start time will set x ammount of time after presale start time.
-    /// Leads to less dynamics. The time is in seconds from the 1970 epoch
-    /// @param _presaleStartTime argument must be set in seconds
-    /// @param _timeBetweenSales argument must be set in seconds
-    // function setPresaleStartTime(
-    //     uint256 _presaleStartTime,
-    //     uint256 _timeBetweenSales
-    // ) public onlyOwner {
-    //     presaleStartTime = _presaleStartTime;
-    //     publicSaleStartTime = _presaleStartTime + _timeBetweenSales;
-    //     emit SaleHasBeenSet(presaleStartTime, publicSaleStartTime);
-    // }
-
-    // function getSaleStartTimes() public view returns (string memory) {
-    //     return
-    //         string(
-    //             abi.encodePacked(
-    //                 "Presale is at",
-    //                 Strings.toString(presaleStartTime),
-    //                 ", and public sale is at",
-    //                 Strings.toString(publicSaleStartTime),
-    //                 " seconds from epoch"
-    //             )
-    //         );
-    // }
-
-    /// @dev set this based on volatility of market
-    function setPricePerBundle(uint256 _gwei) public onlyOwner {
-        pricePerBundle = _gwei;
-        // emit PricePerBundle(msg.sender, _gwei);
-    }
-
-    function getPricePerBundle() public view returns (uint256) {
-        return pricePerBundle;
-    }
-
-    // ------------------------------ //
-    /// @dev VIF and Presale section ///
-    // ------------------------------ //
-
-    /// @dev VIF members will have confirmed spots in minting
-    /* @notice VIF members can mint up to three times. Once in VIF sale,
-        onces in Presale, and once in public. We did this to let the
-        member be as active as they want and removed the ability to
-        mint all 3 bundles at once. This leads to ore fairness in minting
-    */
-    function setVifMember(address[] memory _vifs) public onlyOwner {
-        for (uint256 i = 0; i < _vifs.length; i++) {
-            addressToCutee[_vifs[i]].vifMember = true;
-            vifMemberList.push(_vifs[i]);
-        }
-    }
-
-    function setFruityMember(address[] memory _fruities) public onlyOwner {
-        for (uint256 i = 0; i < _fruities.length; i++) {
-            addressToCutee[_fruities[i]].presaleMember = true;
-            presaleMemberList.push(_fruities[i]);
-        }
-    }
-
-    /// @dev manualy remove VIF members with given addresses
-    function removeVIFMembers(address[] memory _vifs) public onlyOwner {
-        for (uint256 i = 0; i < _vifs.length; i++) {
-            addressToCutee[_vifs[i]].vifMember = false;
-            for (uint256 j = 0; j < vifMemberList.length; i++) {
-                if (_vifs[i] == vifMemberList[j]) {
-                    address lastMember = vifMemberList[
-                        vifMemberList.length - 1
-                    ];
-                    vifMemberList.pop();
-                    vifMemberList[i] = lastMember;
-                }
-            }
-        }
-    }
-
-    /// @dev reset all bundleBalances and presaleSpots
-    function resetAddressToCutee() public onlyOwner {
-        for (uint256 i = 0; i < mintersList.length; i++) {
-            addressToCutee[mintersList[i]].bundleBalance = 0;
-            addressToCutee[mintersList[i]].presaleMember = false;
-        }
-        delete mintersList;
-    }
-
-    /// NOTE: this can be implemented if the contract has sufficient room to add to
-    /// @dev can be used to get a vifMember
-    /// @notice if the address you entered returns with 1 it has been VIFed
-    // function getMember(address _address) public view returns (string memory) {
-    //     if (addressToVifMember[_address] == 1) {
-    //         return string(abi.encodePacked("The address entered is VIF'd"));
-    //     }
-    //     if (addressToPresaleMember[_address] == 1) {
-    //         return
-    //             string(
-    //                 abi.encodePacked("The address entered is a Presale Member")
-    //             );
-    //     }
-    //     return
-    //         string(
-    //             abi.encodePacked(
-    //                 "The address entered is NOT a VIF or Presale Member"
-    //             )
-    //         );
-    // }
-
-    /// @dev used to see how many vifs and fruity members there are
-    function getMemberCount() public view onlyOwner returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    "There is/are ",
-                    Strings.toString(vifMemberList.length),
-                    " VIF Member(s). There is/are ",
-                    Strings.toString(presaleMemberList.length),
-                    " Presale Member(s)."
-                )
-            );
     }
 }
