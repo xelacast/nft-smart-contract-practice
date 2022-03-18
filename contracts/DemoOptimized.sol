@@ -94,41 +94,9 @@ contract DemoOptimized is
     // bool publicSaleIsActive;
 
     //TODO set merkleTreeRoot
-    // modifier isSaleActive(_maxAmount) {
-    //     // TODO logic in timing and verifying merkle tree
-    //     if(vifSaleIsActive) {
-    //         require(_verifyMerkle(_merkleProof, _maxAmount);)
-    //     }
-
-    //     _;
-    // }
-
-    function setVifSale() public onlyOwner {
-        vifSaleIsActive = !vifSaleIsActive;
-    }
-
-    function setFruitieSale() public onlyOwner {
-        fruitiesSaleIsActive = !fruitiesSaleIsActive;
-    }
-
-    function setPublicSale() public onlyOwner {
-        publicSaleIsActive = !publicSaleIsActive;
-    }
-
-    /**
-        @dev primary mint for all mints
-     */
-    function mintBundle(bytes32[] memory _merkleProof, uint256 _maxAmount)
-        public
-        payable
-        nonReentrant
-    {
+    modifier isSaleActive(bytes32[] memory _merklyProof, uint256 _maxAmount) {
+        // TODO logic in timing and verifying merkle tree
         address sender = _msgSender();
-
-        // I have to activate and reactivate sales. When VIF ends
-        // set it false and set fruities sale to true
-        // When fruity sale ends set fruity to false and activate
-        // public sale
         if (vifSaleIsActive && _verifyMerkle(_merkleProof, 30)) {
             require(
                 bundleBalance[sender] < 1,
@@ -150,8 +118,6 @@ contract DemoOptimized is
             );
         }
         if (publicSaleIsActive) {
-            // console.log(_maxAmount);
-            // console.log(_verifyMerkle(_merkleProof, _maxAmount));
             if (_maxAmount == 30 && _verifyMerkle(_merkleProof, _maxAmount)) {
                 require(
                     bundleBalance[sender] < 3,
@@ -171,6 +137,37 @@ contract DemoOptimized is
                 );
             }
         }
+        _;
+    }
+
+    function setVifSale() public onlyOwner {
+        vifSaleIsActive = !vifSaleIsActive;
+    }
+
+    function setFruitieSale() public onlyOwner {
+        fruitiesSaleIsActive = !fruitiesSaleIsActive;
+    }
+
+    function setPublicSale() public onlyOwner {
+        publicSaleIsActive = !publicSaleIsActive;
+    }
+
+    /**
+        @dev primary mint for all mints
+     */
+    function mintBundle()
+        public
+        payable
+        isSaleActive(_merkleProof, _maxAmount)
+        nonReentrant
+    {
+        address sender = _msgSender();
+
+        // I have to activate and reactivate sales. When VIF ends
+        // set it false and set fruities sale to true
+        // When fruity sale ends set fruity to false and activate
+        // public sale
+
         require(
             msg.value >= 0.1 ether,
             "Not enough ether was sent to purchase your fruit basket."

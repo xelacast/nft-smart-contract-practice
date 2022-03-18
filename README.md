@@ -219,6 +219,8 @@ TODOS for implementation
 #BIG CHANGES
 I removed the parameters of the URI. I will implement hidden and prereveal features with the dns and ipfs only. This will save gas on deployment and setting each season. This also makes the deployment of each season a little less dependent on our contract.
 
+I had to remove all mapping of the whitelist features because it would have taken $5k-$7k in adding people to the fruity list. Roughly 800 people.
+
 #MERKLE TREE THOUGHTS
 
 This is the write up of using a merkle tree to create a VIF list and a fruitylist(presale list)
@@ -231,4 +233,4 @@ Merkle trees are precise. The major portion of correctness has to be done on bot
 
 I am adding a string to the end of the addresses as a padding to show how many amounts they can mint. I have a problem. When i only use the address to create the tree and the proof, Solidity can verify that. When I add an extra string to the end of each account, make the tree, and get the root of the new tree solidity cannot follow that. Solidity uses abi.encodPacked to concatinate bytes. I am sending in the address and the maximum amount they can mint and concatinating it to then get the keccak256 hash of it to create the leaf. When i send it into the merkle proof it spits out false but when i use it in the js file it spits out true
 
-March 17th i figured out how to encode merkle trees into my contract and track them on the frontend and the smartcontract
+March 17th I learned how to encode merkle trees into my contract and track them on the frontend and the smartcontract allowing myself to create a whitelist and maybe two.
