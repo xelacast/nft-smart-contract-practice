@@ -219,7 +219,7 @@ TODOS for implementation
 #BIG CHANGES
 I removed the parameters of the URI. I will implement hidden and prereveal features with the dns and ipfs only. This will save gas on deployment and setting each season. This also makes the deployment of each season a little less dependent on our contract.
 
-I had to remove all mapping of the whitelist features because it would have taken $5k-$7k in adding people to the fruity list. Roughly 800 people.
+I had to remove all mapping of the whitelist features because it would have taken $5k-$7k in adding people to the fruity list. Roughly 800 people. I instead added merkle trees data structure to prove whitelist and presale members.
 
 #MERKLE TREE THOUGHTS
 
@@ -233,4 +233,24 @@ Merkle trees are precise. The major portion of correctness has to be done on bot
 
 I am adding a string to the end of the addresses as a padding to show how many amounts they can mint. I have a problem. When i only use the address to create the tree and the proof, Solidity can verify that. When I add an extra string to the end of each account, make the tree, and get the root of the new tree solidity cannot follow that. Solidity uses abi.encodPacked to concatinate bytes. I am sending in the address and the maximum amount they can mint and concatinating it to then get the keccak256 hash of it to create the leaf. When i send it into the merkle proof it spits out false but when i use it in the js file it spits out true
 
-March 17th I learned how to encode merkle trees into my contract and track them on the frontend and the smartcontract allowing myself to create a whitelist and maybe two.
+March 17th I learned how to encode merkle trees into my contract and track them on the frontend and the smartcontract allowing myself to create a whitelist and maybe two. Merkle trees will save on overhead. Roughly $100,000 worth of overhead. Creating list and mapping and changing data on the EVM is expensive. I can't wait for this technology to become more advanced
+
+March 18th, 2020.
+
+I can do 1 of 2 things.
+1 being i can keep track of the accounts on the ethereum contract which will cost about 5-9$, depending on gas prices, for the user. This will increase mint prices and use 45k more gas units.
+2 I can keep track of accounts that mint through our website. The accounts will be places into a database on our server. This would save roughly $5k-$9k in gas consumption in our mint saving everyone money is key.
+The reason for tracking acconts is to use them to reset the bundleBalance mapping. We must have keys in order to reset a mapping. This will add a little bit of time to development maybe a day or two. I must organize my code super well. Everything will be coming together soon and Ill have to keep it in one directory on my computer. I think the code will be seperated when we launch. I still have so much amazing things to learn. Lets get after it.
+
+Subject to Change:
+  Transfer of mintersCount and MintersList from the smart contract to the server. This will need to be created and tested. I will do that next week Hopefully wednesday. I must learn express, mangodb, docker, aws and a few other things for working with backend. I have experience with DJango and Sqlite. The concepts are the same the technology is different. Lets get to it.
+
+  I want to add extra security incase our owner address gets "hacked". Use an account to launch the contract. Use another account as the beneficiary.
+
+I might have found a major problem for our overhead. Reseting our bundleBalances of 700 - 1000 accounts on the EVM will result in a very large overhead. I will calculate this tomorrow. I have more time this week on working on issues because I have finished the contract as much as I can with the technologies I have created and know.
+Next week I will work on completeing the text of the website, the mint page with no smart contract integration but account links from metamask at least, and then working on creating our own server. The following week I will work on the ipfs/ipns and I will create the 4in1 randomizer. For the randomizer I will need to look at code for a python or javascript image randomizer to see how theyre creating it. For I have not worked with images in either language. Matlab was the only language i used for images and I worked with pixel values in the image itself. This will be different but it will be good.
+
+I have finished tests for the solidity contract. I have tested the following: balance of contract and withdraw, giveaways, minting, uri, and the whitelist. I must test season reset when I can use a server. I must test whitelist again when I create everything on the server. The server will automate the merkle tree proofs and the root through calculations involving data from our database.
+
+The mint page. When mint goes live anyone who mints through our contract their account hash will be added to our database and a counter for how many times they tried to mint will be put in there. If the account is in our database already itll add a count to it. You might be wondering what about people who dont use our website to mint? I have created it so scripts can only mint through public sale. The VIF and Presale both require a proof and a maxammount for paramters for the mint function. Once We have an oversubscription of presale then noone can mint public and we wont have that problem. Also in order to reset the bundleBalance we need accounts. If our account do not get updated to the DB the next time someone tries to mint as public sale they wont be able to. I will talk to the discord.
+I also want to collect the data of how many scipts minted directly to our contract. Just for personal use.

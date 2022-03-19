@@ -29,6 +29,7 @@ function main() {
   const leaf = keccak256(vifAccountsLeafs[1]);
   console.log(leaf)
   const proof = tree.getHexProof(leaf);
+  console.log(proof);
 
   console.log(tree.verify(proof, leaf, root));
   // console.log(proof)

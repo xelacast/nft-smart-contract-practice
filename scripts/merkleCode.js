@@ -3,7 +3,6 @@ const { keccak256 } = require('ethers/lib/utils');
 const accounts = require('./Accounts.json');
 const hre = require('hardhat');
 // const ethers = require('ethers');
-// //////////////////////////////////
 // This code is going to be used for testing and then put into the
 // Backend
 

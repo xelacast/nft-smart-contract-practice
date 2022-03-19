@@ -10,7 +10,7 @@ async function main() {
   // Do i need a prview uri if I am going to update the ipfs folder with previews?
   const [owner, addr1, addr2, addr3, addr4, a5, a6, a7, a8, a9] = await ethers.getSigners();
 
-  const Contract = await ethers.getContractFactory("DemoOptimized");
+  const Contract = await ethers.getContractFactory("CuteeFruitee");
   const contract = await Contract.deploy(URI);
 
   const encoder = ethers.utils.defaultAbiCoder;

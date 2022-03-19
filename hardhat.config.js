@@ -11,7 +11,7 @@
  const { API_URL, PRIVATE_KEY } = process.env;
  module.exports = {
    solidity: "0.8.13",
-   defaultNetwork: "ropsten",
+   defaultNetwork: "hardhat",
    networks: {
      hardhat: {
        forking: {
@@ -24,6 +24,7 @@
        gasPrice: 100000000000,
        gas: 100000000
      },
+     hardhat: {}
     //  rinkeby: {
     //    url: `https://eth-rinkbey.alchemyapi.io/v2/${API_URL}`,
     //    accounts: [`0x${PRIVATE_KEY}`]
