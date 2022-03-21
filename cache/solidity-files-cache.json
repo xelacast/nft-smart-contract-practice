@@ -2,11 +2,11 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/jhuiice/home/cuteeFruitee/web3Practice/CuteeFruitee/contracts/CuteeFruitee.sol": {
-      "lastModificationDate": 1647650956820,
-      "contentHash": "257cc00f1133353048e21c8706f598a1",
+      "lastModificationDate": 1647823152320,
+      "contentHash": "3b4e5fad221c897a3e4882bf7be6d62f",
       "sourceName": "contracts/CuteeFruitee.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -50,7 +50,7 @@
       "contentHash": "92f9448b23a90ea3bb932ee55cc3ccce",
       "sourceName": "@openzeppelin/contracts/security/ReentrancyGuard.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -85,7 +85,7 @@
       "contentHash": "9c54c6c065d9e590fdcdd72c451425b9",
       "sourceName": "@openzeppelin/contracts/utils/Strings.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -120,7 +120,7 @@
       "contentHash": "5f2c5c4b6af2dd4551027144797bc8be",
       "sourceName": "@openzeppelin/contracts/utils/Context.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -155,7 +155,7 @@
       "contentHash": "b919f5fbfe0ab75cc71f2d361eac7f4b",
       "sourceName": "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -190,7 +190,7 @@
       "contentHash": "42ebf434917ba17c9152ec05241eb5ed",
       "sourceName": "contracts/tokens/IERC1155MetadataURI.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -227,7 +227,7 @@
       "contentHash": "e35a40e88364e9298d95bcdaf5247bb0",
       "sourceName": "contracts/tokens/ERC1155.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -269,7 +269,7 @@
       "contentHash": "be48fedd086037bc499f1ace40861336",
       "sourceName": "contracts/utils/Ownable.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -306,7 +306,7 @@
       "contentHash": "cc4777addd464ea56fa35b1c45df0591",
       "sourceName": "hardhat/console.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -341,7 +341,7 @@
       "contentHash": "a79864a8f91dbdcbaaa4fb466f1304b9",
       "sourceName": "contracts/tokens/IERC1155.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -378,7 +378,7 @@
       "contentHash": "03e6768535ac4da0e9756f1d8a4a018a",
       "sourceName": "contracts/utils/introspection/IERC165.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -413,7 +413,7 @@
       "contentHash": "59513e631e65d93230915c8b34774e18",
       "sourceName": "contracts/tokens/IERC1155Receiver.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -450,7 +450,7 @@
       "contentHash": "f827bc468d82374e53c5dff889338e80",
       "sourceName": "contracts/utils/Address.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -485,7 +485,7 @@
       "contentHash": "e8592548553f70a57b18e20c6a6fd277",
       "sourceName": "contracts/utils/introspection/ERC165.sol",
       "solcConfig": {
-        "version": "0.8.13",
+        "version": "0.8.9",
         "settings": {
           "optimizer": {
             "enabled": false,
@@ -515,6 +515,41 @@
       ],
       "artifacts": [
         "ERC165"
+      ]
+    },
+    "/home/jhuiice/home/cuteeFruitee/web3Practice/CuteeFruitee/contracts/MintMapping.sol": {
+      "lastModificationDate": 1647710036590,
+      "contentHash": "34a3bc080a55915d29b6efd0808921ea",
+      "sourceName": "contracts/MintMapping.sol",
+      "solcConfig": {
+        "version": "0.8.9",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.9"
+      ],
+      "artifacts": [
+        "MintMapping"
       ]
     }
   }

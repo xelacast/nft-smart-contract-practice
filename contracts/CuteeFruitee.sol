@@ -26,7 +26,7 @@ contract CuteeFruitee is
     uint256 fruitTokenId = 1;
     uint256 fourInOneTokenId = 100001;
 
-    uint256 bundleSupply;
+    uint256 bundleSupply = 1000;
     uint256 receiptSupply;
 
     /// @notice @dev 100000000 gwei
@@ -44,6 +44,8 @@ contract CuteeFruitee is
     uint256 public presaleMintCount;
     uint256 public vifMintCount;
 
+    // @dev in future to delete this and use a different technique
+    // to save gas for users who mint.
     address[] public mintersList;
 
     mapping(address => uint256) private bundleBalance;
@@ -56,7 +58,6 @@ contract CuteeFruitee is
         vifMintCount = 100;
         presaleMintCount = 345;
         receiptSupply = 3000;
-        bundleSupply = 1000;
     }
 
     function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {
@@ -231,6 +232,41 @@ contract CuteeFruitee is
         _mintBatch(_to, idHolder, batchMintAmmount, "");
 
         bundleSupply--;
+    }
+
+    // ------------------------ //
+    // ---- Cutee Exchange ---- //
+    // ------------------------ //
+
+    function cuteeExchange(
+        uint256 _fruitTokenId,
+        uint256 _fourInOneTokenId,
+        uint256 _quadrant
+    ) public nonReentrant {
+        address[] memory accounts = new address[](3);
+        uint256[] memory balances = new uint256[](3);
+        uint256[] memory balanceCheck = new uint256[](3);
+
+        accounts[0] = msg.sender;
+        accounts[1] = msg.sender;
+        accounts[2] = msg.sender;
+
+        balances[0] = _fruitTokenId;
+        balances[1] = _fourInOneTokenId;
+        balances[2] = receiptTokenId;
+
+        balanceCheck = balanceOfBatch(accounts, balances);
+
+        require(balanceCheck[0] > 0, "You do not own the fruittoken");
+        require(balanceCheck[1] > 0, "You do not own the fourInOneToken");
+        require(balanceCheck[2] > 0, "You do not own a receipt for exchange");
+
+        // check to see if the 4in1 is listed on any exchange.
+        // Cannot do a 4in1 exhange if 4in1 is listed on an exchange.
+
+        // send to oracle
+
+        // return oracle boolean.
     }
 
     // ---------------- //

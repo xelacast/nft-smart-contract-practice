@@ -254,3 +254,9 @@ I have finished tests for the solidity contract. I have tested the following: ba
 
 The mint page. When mint goes live anyone who mints through our contract their account hash will be added to our database and a counter for how many times they tried to mint will be put in there. If the account is in our database already itll add a count to it. You might be wondering what about people who dont use our website to mint? I have created it so scripts can only mint through public sale. The VIF and Presale both require a proof and a maxammount for paramters for the mint function. Once We have an oversubscription of presale then noone can mint public and we wont have that problem. Also in order to reset the bundleBalance we need accounts. If our account do not get updated to the DB the next time someone tries to mint as public sale they wont be able to. I will talk to the discord.
 I also want to collect the data of how many scipts minted directly to our contract. Just for personal use.
+
+March 19th, 2022
+
+I created a mock removeal of bundleBalance of 1000 users. I used
+mapping(string => uint256) bundleBalances;
+to hold the bundleBalances. I used strings because at the time I wasn't knowledgeable on creating 1000 unique addresses with ethers or by hand. I comprimised. The bad news is to set 1000 items values in a mapping to 0 will use 9,614,717 gas units on hardhat. That is roughly $1500 usd. This is less than I thought for expenses. This will not be bad. Wind blown over my head (metaphorically) we'll be fine to o this.
